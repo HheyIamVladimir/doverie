@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Доверие v1.2.1</title>
     <style>
-        /* ПЕРЕМЕННЫЕ И ТЕМЫ (ОСТАВИЛ БЕЗ ИЗМЕНЕНИЙ) */
+        /* ПЕРЕМЕННЫЕ И ТЕМЫ */
         :root { --bg-color: #ff6600; --text-color: #111; --box-bg: #fff; --accent: #111; --sidebar-bg: #eee; --radius: 8px; }
         [data-theme="dark"] { --bg-color: #111; --text-color: #ff6600; --box-bg: #1a1a1a; --accent: #ff6600; --sidebar-bg: #252525; }
         [data-theme="neon"] { --bg-color: #000; --text-color: #0ff; --box-bg: #050505; --accent: #0ff; --sidebar-bg: #111; }
@@ -44,7 +44,6 @@
 
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--box-bg); }
         
-        /* --- ОБНОВЛЕННЫЙ ЭКРАН ВХОДА --- */
         #auth-screen { display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%; }
         .auth-card { 
             background: var(--sidebar-bg); padding: 25px; border: 2px solid var(--accent); 
@@ -56,13 +55,13 @@
 
         #chat-screen { display: none; flex-direction: column; height: 100%; }
         .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .message { padding: 8px 12px; border-radius: 8px; max-width: 80%; font-size: 0.85rem; }
+        .message { padding: 8px 12px; border-radius: 8px; max-width: 80%; font-size: 0.85rem; word-wrap: break-word; }
         .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; border-bottom-right-radius: 0; }
         .msg-their { background: var(--sidebar-bg); border: 1px solid var(--accent); align-self: flex-start; border-bottom-left-radius: 0; }
 
         .chat-input { display: flex; padding: 10px; border-top: 1px solid var(--accent); gap: 5px; }
         input, button, select { padding: 10px; border: 1px solid var(--accent); background: var(--box-bg); color: var(--text-color); font-family: inherit; }
-        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; }
+        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; border: none; }
 
         #settings-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--box-bg); z-index: 100; flex-direction: column; padding: 20px; box-sizing: border-box;}
 
@@ -83,10 +82,10 @@
 
     <div class="app-container" id="app">
         <div class="header">
-            <button onclick="toggleSidebar()">☰</button>
+            <button type="button" onclick="toggleSidebar()">☰</button>
             <span id="my-info">СТАНЦИЯ</span>
             <div>
-                <button onclick="toggleSettings()">⚙</button>
+                <button type="button" onclick="toggleSettings()">⚙</button>
             </div>
         </div>
 
@@ -105,10 +104,10 @@
                     <option value="gold">Золото</option>
                 </select>
                 <div style="margin-top: 20px;">
-                    <button onclick="applyLambda()">АКТИВИРОВАТЬ λ (HL2)</button>
+                    <button type="button" onclick="applyLambda()">АКТИВИРОВАТЬ λ (HL2)</button>
                 </div>
-                <button onclick="location.reload()" style="margin-top: 20px;">ВЫХОД</button>
-                <button onclick="toggleSettings()" style="margin-top: auto;">← НАЗАД</button>
+                <button type="button" onclick="location.reload()" style="margin-top: 20px;">ВЫХОД</button>
+                <button type="button" onclick="toggleSettings()" style="margin-top: auto;">← НАЗАД</button>
             </div>
 
             <div class="sidebar" id="sidebar">
@@ -126,7 +125,7 @@
                         <div id="form-login">
                             <input type="text" id="loginId" placeholder="ВАШ ID" style="width: 100%; margin-bottom: 10px; box-sizing: border-box;">
                             <input type="password" id="loginPass" placeholder="ПАРОЛЬ" style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
-                            <button onclick="login()" style="width: 100%;">ВОЙТИ</button>
+                            <button type="button" onclick="login()" style="width: 100%;">ВОЙТИ</button>
                         </div>
 
                         <div id="form-reg" class="hidden">
@@ -136,7 +135,7 @@
                                 <option value="app">Я В ПРИЛОЖЕНИИ [app]</option>
                             </select>
                             <input type="password" id="regPass" placeholder="ПАРОЛЬ" style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
-                            <button onclick="register()" style="width: 100%;">СОЗДАТЬ АККАУНТ</button>
+                            <button type="button" onclick="register()" style="width: 100%;">СОЗДАТЬ АККАУНТ</button>
                         </div>
 
                         <p id="auth-msg" style="font-size: 0.8rem; text-align: center; margin-top: 15px; font-weight: bold; color: var(--accent);"></p>
@@ -146,13 +145,13 @@
                 <div id="chat-screen">
                     <div class="chat-input" style="border-bottom: 1px solid var(--accent); border-top: none;">
                         <input type="text" id="searchId" placeholder="ID...">
-                        <button onclick="searchAndStart()">ЧАТ</button>
+                        <button type="button" onclick="searchAndStart()">ЧАТ</button>
                         <span id="current-chat-info" style="font-size: 0.7rem; margin-left: 5px;"></span>
                     </div>
                     <div class="chat-history" id="chat-history"></div>
                     <div class="chat-input">
                         <input type="text" id="msgText" placeholder="Сообщение...">
-                        <button onclick="sendMessage()">➤</button>
+                        <button type="button" onclick="sendMessage()">➤</button>
                     </div>
                 </div>
             </div>
@@ -172,6 +171,8 @@
 
         let myId = null;
         let currentChatId = null;
+        let listInterval = null;
+        let msgInterval = null;
 
         function changeTheme(theme) { document.body.setAttribute('data-theme', theme); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -181,45 +182,52 @@
             if(myId) document.getElementById('settings-id').innerText = myId;
         }
 
-        // Переключатель вкладок
         function switchAuth(type) {
             document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
             document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
             document.getElementById('tab-login').classList.toggle('active', type === 'login');
             document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
-            document.getElementById('auth-msg').innerText = ''; // Чистим сообщения при переключении
-        }
-
-        async function applyLambda() {
-            if(!myId) return;
-            const res = await fetch('/api/lambda', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id: myId})
-            });
-            const data = await res.json();
-            if(data.success) alert('Лямбда λ активирована! Перезайдите в чат.');
+            document.getElementById('auth-msg').innerHTML = '';
         }
 
         async function register() {
-            const username = document.getElementById('regName').value;
-            const password = document.getElementById('regPass').value;
+            const username = document.getElementById('regName').value.trim();
+            const password = document.getElementById('regPass').value.trim();
             const platform = document.getElementById('platform').value;
+            const msgBlock = document.getElementById('auth-msg');
+
             if(!username || !password) return alert('Заполни все поля!');
             
-            const res = await fetch('/api/register', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username, password, platform})
-            });
-            const data = await res.json();
-            if(data.success) {
-                // ПОКАЗЫВАЕМ ID ЖИРНО И КРАСИВО
-                document.getElementById('auth-msg').innerHTML = `АККАУНТ СОЗДАН!<br><span style="font-size: 1.2rem;">ВАШ ID: ${data.id}</span><br>Теперь перейдите во вкладку ВХОД`;
-            }
+            msgBlock.innerText = "РЕГИСТРАЦИЯ...";
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password, platform})
+                });
+                const data = await res.json();
+
+                if(data.success) {
+                    document.getElementById('regName').value = "";
+                    document.getElementById('regPass').value = "";
+                    msgBlock.innerHTML = `
+                        <div style="background: var(--accent); color: var(--box-bg); padding: 12px; border-radius: 4px; margin-top: 10px; border: 2px solid var(--text-color);">
+                            УСПЕХ! ВАШ ID:<br>
+                            <span style="font-size: 1.6rem; letter-spacing: 2px;">${data.id}</span><br>
+                            <small>ЗАПИШИТЕ ЕГО И ВОЙДИТЕ</small>
+                        </div>`;
+                } else {
+                    msgBlock.innerText = "Ошибка: " + data.error;
+                }
+            } catch (e) { msgBlock.innerText = "Ошибка сервера"; }
         }
 
         async function login() {
-            const id = document.getElementById('loginId').value.toUpperCase();
-            const password = document.getElementById('loginPass').value;
+            const id = document.getElementById('loginId').value.trim().toUpperCase();
+            const password = document.getElementById('loginPass').value.trim();
+            if(!id || !password) return alert('Введите данные');
+
             const res = await fetch('/api/login', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id, password})
@@ -230,7 +238,9 @@
                 document.getElementById('my-info').innerText = data.username;
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
-                loadChatList(); setInterval(loadChatList, 5000);
+                loadChatList();
+                if(listInterval) clearInterval(listInterval);
+                listInterval = setInterval(loadChatList, 5000);
             } else alert('Неверный ID или пароль');
         }
 
@@ -241,8 +251,7 @@
             document.getElementById('chat-list').innerHTML = chats.map(c => `
                 <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="selectChat('${c.id}', '${c.username}')">
                     <b>${c.username}</b><br><small>#${c.id}</small>
-                </div>
-            `).join('');
+                </div>`).join('');
         }
 
         function selectChat(id, username) {
@@ -250,11 +259,13 @@
             document.getElementById('current-chat-info').innerText = username;
             document.getElementById('sidebar').classList.remove('open');
             loadMessages();
-            setInterval(loadMessages, 2000);
+            if(msgInterval) clearInterval(msgInterval);
+            msgInterval = setInterval(loadMessages, 2000);
         }
 
         async function searchAndStart() {
-            const id = document.getElementById('searchId').value.toUpperCase();
+            const id = document.getElementById('searchId').value.trim().toUpperCase();
+            if(!id || id === myId) return;
             const res = await fetch(`/api/users/${id}`);
             const data = await res.json();
             if(data.success) selectChat(data.id, data.username);
@@ -262,7 +273,7 @@
         }
 
         async function sendMessage() {
-            const text = document.getElementById('msgText').value;
+            const text = document.getElementById('msgText').value.trim();
             if(!text || !currentChatId) return;
             await fetch('/api/messages', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -279,10 +290,19 @@
             const history = document.getElementById('chat-history');
             history.innerHTML = messages.map(m => `
                 <div class="message ${m.fromId === myId ? 'msg-my' : 'msg-their'}">
-                    ${m.text} <br><small style="font-size: 0.6rem; opacity: 0.7;">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-                </div>
-            `).join('');
+                    ${m.text}<br><small style="font-size: 0.6rem; opacity: 0.7;">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                </div>`).join('');
             history.scrollTop = history.scrollHeight;
+        }
+
+        async function applyLambda() {
+            if(!myId) return;
+            const res = await fetch('/api/lambda', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: myId})
+            });
+            const data = await res.json();
+            if(data.success) alert('λ активирована!');
         }
     </script>
 </body>
