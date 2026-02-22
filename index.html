@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Доверие</title>
     <style>
         :root {
@@ -11,6 +11,7 @@
             --box-bg: #fff;
             --accent: #111;
             --sidebar-bg: #eee;
+            --radius: 8px;
         }
         [data-theme="dark"] {
             --bg-color: #111;
@@ -29,101 +30,161 @@
             overflow: hidden;
         }
 
-        /* --- НОВОЕ ИНТРО --- */
+        /* --- ИНТРО --- */
         #intro {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #ff6600; color: #111;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; transition: opacity 1s;
         }
-        .intro-title { font-size: 2.5rem; font-weight: bold; opacity: 0; transition: 1s; }
-        .intro-sub { position: absolute; bottom: 40px; font-size: 0.9rem; opacity: 0; transition: 1.5s; }
+        .intro-title { font-size: 2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; padding: 20px; }
+        .intro-sub { position: absolute; bottom: 40px; font-size: 0.8rem; opacity: 0; transition: 1.5s; }
 
         /* --- ИНТЕРФЕЙС --- */
         .app-container { 
             display: none; width: 95%; max-width: 1000px; height: 90vh; 
             background: var(--box-bg); border: 2px solid var(--accent); 
             display: flex; flex-direction: column; overflow: hidden; 
+            position: relative;
         }
-        .header { padding: 10px 20px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; background: var(--box-bg); }
         
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        .header { 
+            padding: 10px 15px; 
+            border-bottom: 2px solid var(--accent); 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--box-bg);
+            font-size: 0.9rem;
+        }
+        
+        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        /* Боковая панель (Список чатов) */
+        /* Боковая панель */
         .sidebar { 
             width: 250px; border-right: 2px solid var(--accent); 
             background: var(--sidebar-bg); display: flex; flex-direction: column; 
+            transition: 0.3s;
         }
-        .sidebar-header { padding: 10px; font-weight: bold; border-bottom: 1px solid var(--accent); text-align: center; }
+        .sidebar-header { padding: 10px; font-weight: bold; border-bottom: 1px solid var(--accent); text-align: center; font-size: 0.8rem; }
         #chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 15px 10px; border-bottom: 1px solid var(--accent); cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        .chat-item { padding: 12px 10px; border-bottom: 1px solid var(--accent); cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
         .chat-item:hover { background: var(--bg-color); color: var(--text-color); }
         .chat-item.active { background: var(--accent); color: var(--box-bg); }
 
-        /* Основная область чата */
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--box-bg); }
-        #auth-screen { display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%; }
+        /* Область чата */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--box-bg); min-width: 0; }
+        
+        /* КРАСИВЫЙ ВХОД */
+        #auth-screen { 
+            display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%;
+            background: radial-gradient(circle at center, var(--sidebar-bg) 0%, var(--box-bg) 100%);
+        }
+        .auth-card {
+            background: var(--sidebar-bg); padding: 30px; border: 2px solid var(--accent);
+            border-radius: var(--radius); box-shadow: 10px 10px 0px var(--accent);
+            width: 100%; max-width: 300px;
+        }
+
         #chat-screen { display: none; flex-direction: column; height: 100%; }
 
-        .search-bar { padding: 10px; border-bottom: 1px solid var(--accent); display: flex; gap: 5px; }
+        .search-bar { padding: 10px; border-bottom: 1px solid var(--accent); display: flex; gap: 5px; background: var(--sidebar-bg); }
         .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         
         /* Сообщения */
-        .message { padding: 10px; border-radius: 5px; max-width: 75%; font-size: 0.9rem; position: relative; }
+        .message { padding: 10px; border-radius: 8px; max-width: 85%; font-size: 0.85rem; line-height: 1.4; }
         .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; border-bottom-right-radius: 0; }
         .msg-their { background: var(--sidebar-bg); border: 1px solid var(--accent); align-self: flex-start; border-bottom-left-radius: 0; }
 
-        .chat-input { display: flex; padding: 15px; border-top: 1px solid var(--accent); gap: 10px; }
-        input, button { padding: 8px; border: 1px solid var(--accent); background: transparent; color: var(--text-color); font-family: inherit; }
-        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; }
+        .chat-input { display: flex; padding: 10px; border-top: 1px solid var(--accent); gap: 8px; background: var(--box-bg); }
         
-        input#searchId { width: 100px; }
+        input, button { 
+            padding: 10px; border: 1px solid var(--accent); background: var(--box-bg); 
+            color: var(--text-color); font-family: inherit; border-radius: 4px; outline: none;
+        }
+        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        
+        input#searchId { width: 80px; }
         input#msgText { flex: 1; }
+
+        /* ВКАДКА НАСТРОЕК */
+        #settings-screen {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--box-bg); z-index: 100; flex-direction: column; padding: 20px;
+        }
+
+        /* --- АДАПТИВНОСТЬ ПОД ТЕЛЕФОН --- */
+        @media (max-width: 600px) {
+            .sidebar { 
+                position: absolute; left: -100%; z-index: 50; height: 100%; width: 80%; 
+            }
+            .sidebar.open { left: 0; box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
+            .header { font-size: 0.75rem; padding: 8px; }
+            .intro-title { font-size: 1.5rem; }
+            .auth-card { padding: 20px; width: 85%; }
+            .message { max-width: 90%; }
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="intro">
         <div class="intro-title" id="introTitle">Мессенджер Доверие</div>
-        <div class="intro-sub" id="introSub">пока что только на бумаге*</div>
+        <div class="intro-sub" id="introSub">by Vlad.js | v1.1*</div>
     </div>
 
     <div class="app-container" id="app" style="display: none;">
         <div class="header">
+            <button id="menu-btn" onclick="toggleSidebar()" class="hidden-pc">☰</button>
             <span id="my-info">ДОВЕРИЕ / СТАНЦИЯ</span>
-            <button onclick="toggleTheme()">ТЕМА ◐</button>
+            <div>
+                <button onclick="toggleSettings()">⚙</button>
+                <button onclick="toggleTheme()">◑</button>
+            </div>
         </div>
 
         <div class="main-layout">
-            <div class="sidebar">
-                <div class="sidebar-header">ЧАТЫ</div>
-                <div id="chat-list">
-                    </div>
+            <div id="settings-screen">
+                <h2>НАСТРОЙКИ</h2>
+                <p>Ваш ID: <b id="settings-id">----</b></p>
+                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="alert('Скоро: смена ника')">СМЕНИТЬ ИМЯ</button>
+                    <button onclick="location.reload()">ВЫЙТИ ИЗ СИСТЕМЫ</button>
+                    <button onclick="toggleSettings()" style="margin-top: 50px;">← НАЗАД</button>
+                </div>
+            </div>
+
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">МОИ ЧАТЫ</div>
+                <div id="chat-list"></div>
             </div>
 
             <div class="chat-area">
                 <div id="auth-screen">
-                    <h3 style="margin-bottom: 20px;">ДОСТУП</h3>
-                    <input type="text" id="username" placeholder="ИМЯ (ДЛЯ РЕГИСТРАЦИИ)">
-                    <input type="text" id="loginId" placeholder="ВАШ ID (ДЛЯ ВХОДА)">
-                    <input type="password" id="password" placeholder="ПАРОЛЬ">
-                    <div style="margin-top: 15px;">
-                        <button onclick="register()">СОЗДАТЬ ID</button>
-                        <button onclick="login()">ВОЙТИ</button>
+                    <div class="auth-card">
+                        <h3 style="margin-top: 0; text-align: center;">ДОСТУП</h3>
+                        <input type="text" id="username" placeholder="ИМЯ" style="width: 90%; margin-bottom: 10px;">
+                        <input type="text" id="loginId" placeholder="ВАШ ID" style="width: 90%; margin-bottom: 10px;">
+                        <input type="password" id="password" placeholder="ПАРОЛЬ" style="width: 90%; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 5px; justify-content: center; margin-top: 10px;">
+                            <button onclick="register()">РЕГИСТРАЦИЯ</button>
+                            <button onclick="login()">ВОЙТИ</button>
+                        </div>
+                        <p id="auth-msg" style="font-size: 0.7rem; text-align: center; margin-top: 15px; color: var(--accent);"></p>
                     </div>
-                    <p id="auth-msg" style="font-size: 0.8rem; margin-top: 20px;"></p>
                 </div>
 
                 <div id="chat-screen">
                     <div class="search-bar">
                         <input type="text" id="searchId" placeholder="ID...">
-                        <button onclick="searchAndStart()">НАЙТИ</button>
-                        <span id="current-chat-info" style="font-size: 0.8rem; align-self: center; margin-left: 10px; opacity: 0.7;"></span>
+                        <button onclick="searchAndStart()">ЧАТ</button>
+                        <span id="current-chat-info" style="font-size: 0.75rem; align-self: center; margin-left: 5px; overflow: hidden; white-space: nowrap;"></span>
                     </div>
                     <div class="chat-history" id="chat-history"></div>
                     <div class="chat-input">
-                        <input type="text" id="msgText" placeholder="Написать сообщение...">
-                        <button onclick="sendMessage()">ОТПРАВИТЬ</button>
+                        <input type="text" id="msgText" placeholder="Сообщение...">
+                        <button onclick="sendMessage()">➤</button>
                     </div>
                 </div>
             </div>
@@ -131,7 +192,7 @@
     </div>
 
     <script>
-        // --- АНИМАЦИЯ ИНТРО ---
+        // Интро и старт
         window.onload = () => {
             const title = document.getElementById('introTitle');
             const sub = document.getElementById('introSub');
@@ -143,7 +204,7 @@
                     document.getElementById('intro').style.display = 'none';
                     document.getElementById('app').style.display = 'flex';
                 }, 1000);
-            }, 3500);
+            }, 3000);
         };
 
         let myId = null;
@@ -156,6 +217,16 @@
             body.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
         }
 
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function toggleSettings() {
+            const s = document.getElementById('settings-screen');
+            s.style.display = (s.style.display === 'flex' ? 'none' : 'flex');
+            if(myId) document.getElementById('settings-id').innerText = myId;
+        }
+
         async function register() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -165,7 +236,7 @@
                 body: JSON.stringify({username, password})
             });
             const data = await res.json();
-            if(data.success) document.getElementById('auth-msg').innerText = `ID СОЗДАН: ${data.id}`;
+            if(data.success) document.getElementById('auth-msg').innerText = `ID СОЗДАН: ${data.id}. ЗАПИШИ ЕГО!`;
         }
 
         async function login() {
@@ -182,7 +253,7 @@
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
                 loadChatList();
-                setInterval(loadChatList, 5000); // Обновлять список чатов раз в 5 сек
+                setInterval(loadChatList, 5000);
             } else alert(data.error);
         }
 
@@ -193,7 +264,7 @@
             const list = document.getElementById('chat-list');
             list.innerHTML = chats.map(c => `
                 <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="selectChat('${c.id}', '${c.username}')">
-                    ${c.username} <br> <span style="font-size: 0.6rem; opacity: 0.6;">#${c.id}</span>
+                    <b>${c.username}</b> <br> <span style="font-size: 0.6rem; opacity: 0.6;">#${c.id}</span>
                 </div>
             `).join('');
         }
@@ -201,6 +272,7 @@
         function selectChat(id, username) {
             currentChatId = id;
             document.getElementById('current-chat-info').innerText = `@${username}`;
+            document.getElementById('sidebar').classList.remove('open'); // Закрыть меню на мобиле
             loadMessages();
             if(refreshInterval) clearInterval(refreshInterval);
             refreshInterval = setInterval(loadMessages, 2000);
@@ -209,6 +281,7 @@
 
         async function searchAndStart() {
             const id = document.getElementById('searchId').value.toUpperCase();
+            if(!id) return;
             const res = await fetch(`/api/users/${id}`);
             const data = await res.json();
             if(data.success) selectChat(data.id, data.username);
@@ -224,7 +297,6 @@
             });
             document.getElementById('msgText').value = '';
             loadMessages();
-            loadChatList();
         }
 
         async function loadMessages() {
@@ -232,7 +304,7 @@
             const res = await fetch(`/api/messages/${myId}/${currentChatId}`);
             const messages = await res.json();
             const history = document.getElementById('chat-history');
-            const isAtBottom = history.scrollHeight - history.scrollTop <= history.clientHeight + 50;
+            const isAtBottom = history.scrollHeight - history.scrollTop <= history.clientHeight + 100;
             
             history.innerHTML = messages.map(m => `
                 <div class="message ${m.fromId === myId ? 'msg-my' : 'msg-their'}">${m.text}</div>
