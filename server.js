@@ -48,6 +48,38 @@ function generateGroupId() {
 
 db = loadDB();
 
+// ==================== ОНЛАЙН-СТАТУС ====================
+// Хранится только в памяти (сбрасывается при перезапуске — это нормально)
+const onlineUsers = new Map(); // userId -> lastSeen timestamp
+
+function pingOnline(userId) {
+    onlineUsers.set(userId, Date.now());
+}
+
+function isOnline(userId) {
+    const last = onlineUsers.get(userId);
+    if (!last) return false;
+    return (Date.now() - last) < 35000; // онлайн если пинговал <35 сек назад
+}
+
+// Пинг онлайна (клиент вызывает каждые 20 сек)
+app.post('/api/ping', (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ success: false });
+    pingOnline(userId);
+    res.json({ success: true });
+});
+
+// Статус конкретного пользователя
+app.get('/api/status/:userId', (req, res) => {
+    const { userId } = req.params;
+    const last = onlineUsers.get(userId);
+    res.json({
+        online: isOnline(userId),
+        lastSeen: last || null
+    });
+});
+
 // ==================== ПОЛЬЗОВАТЕЛИ ====================
 
 // Регистрация
@@ -69,6 +101,7 @@ app.post('/api/login', (req, res) => {
     const { id, password } = req.body;
     const user = db.users.find(u => u.id === id && u.password === password);
     if (user) {
+        pingOnline(user.id);
         res.json({ success: true, id: user.id, username: user.username });
     } else {
         res.status(401).json({ success: false });
@@ -89,7 +122,18 @@ app.get('/api/chats/:myId', (req, res) => {
 
     const activeChats = db.users
         .filter(u => chattedIds.has(u.id))
-        .map(u => ({ id: u.id, username: u.username }));
+        .map(u => {
+            // Считаем непрочитанные: сообщения ОТ собеседника, у которых нет поля readBy с myId
+            const unread = db.messages.filter(m =>
+                m.fromId === u.id && m.toId === myId && !m.readBy?.includes(myId)
+            ).length;
+            return {
+                id: u.id,
+                username: u.username,
+                online: isOnline(u.id),
+                unread
+            };
+        });
 
     res.json(activeChats);
 });
@@ -104,13 +148,25 @@ app.post('/api/messages', (req, res) => {
     res.json({ success: true });
 });
 
-// Получить историю личных сообщений
+// Получить историю личных сообщений (и пометить как прочитанные)
 app.get('/api/messages/:myId/:otherId', (req, res) => {
     const { myId, otherId } = req.params;
     const history = db.messages.filter(m =>
         (m.fromId === myId && m.toId === otherId) ||
         (m.fromId === otherId && m.toId === myId)
     );
+    // Помечаем входящие как прочитанные
+    let changed = false;
+    history.forEach(m => {
+        if (m.toId === myId && m.fromId === otherId) {
+            if (!m.readBy) m.readBy = [];
+            if (!m.readBy.includes(myId)) {
+                m.readBy.push(myId);
+                changed = true;
+            }
+        }
+    });
+    if (changed) saveDB();
     res.json(history);
 });
 
@@ -232,9 +288,11 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.3.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v1.4.0 ЗАПУЩЕН
     Порт: ${PORT}
     Группы: включены ✓
+    Онлайн-статус: включён ✓
+    Счётчик непрочитанных: включён ✓
     ======================================
     `);
 });

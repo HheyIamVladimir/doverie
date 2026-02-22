@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.3.0</title>
+    <title>Доверие v1.4.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -497,6 +497,48 @@
         }
         .modal-actions button { flex: 1; }
 
+        /* ===== ОНЛАЙН ИНДИКАТОР ===== */
+        .avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+        .online-dot {
+            position: absolute;
+            bottom: 1px; right: 1px;
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: #2ecc71;
+            border: 2px solid var(--surface);
+            animation: fadeIn 0.3s ease;
+        }
+        .online-dot.offline { background: var(--text-muted); }
+
+        /* ===== СЧЁТЧИК НЕПРОЧИТАННЫХ ===== */
+        .unread-badge {
+            background: var(--accent);
+            color: var(--msg-own-color);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            animation: popIn 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        /* ===== СТАТУС В ШАПКЕ ЧАТА ===== */
+        .chat-header-info { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .chat-status {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+        .chat-status.online { color: #2ecc71; }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -529,7 +571,7 @@
         <!-- AUTH -->
         <div id="auth-screen" class="screen active-screen">
             <h2 class="auth-title">ДОВЕРИЕ</h2>
-            <p class="auth-subtitle">v1.3.0 · защищённый мессенджер</p>
+            <p class="auth-subtitle">v1.4.0 · защищённый мессенджер</p>
 
             <div class="auth-block">
                 <h4>◆ РЕГИСТРАЦИЯ</h4>
@@ -587,7 +629,10 @@
         <div id="chat-window" class="screen">
             <div class="header">
                 <button class="secondary" onclick="showList()" style="padding: 8px 12px;">←</button>
-                <span id="chat-target-name" class="header-title">ЧАТ</span>
+                <div class="chat-header-info">
+                    <span id="chat-target-name" class="header-title">ЧАТ</span>
+                    <span id="chat-target-status" class="chat-status"></span>
+                </div>
                 <div style="width: 44px;"></div>
             </div>
             <div class="chat-history" id="chat-history"></div>
@@ -777,12 +822,26 @@
             loadChatList();
             if(window.listInt) clearInterval(window.listInt);
             window.listInt = setInterval(() => { if(activeTab === 'chats') loadChatList(); }, 5000);
+            // Пинг онлайна каждые 20 сек
+            pingOnline();
+            if(window.pingInt) clearInterval(window.pingInt);
+            window.pingInt = setInterval(pingOnline, 20000);
+        }
+
+        async function pingOnline() {
+            if(!myId) return;
+            await fetch('/api/ping', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({userId: myId})
+            }).catch(() => {});
         }
 
         function logout() {
             myId = null; tempUsername = '';
             clearInterval(window.listInt);
             clearInterval(window.msgInterval);
+            clearInterval(window.pingInt);
+            clearInterval(window.statusInt);
             showScreen('auth-screen');
         }
 
@@ -794,11 +853,15 @@
             document.getElementById('chat-list').innerHTML = chats.length
                 ? chats.map((c, i) => `
                     <div class="chat-item" style="animation-delay:${i * 0.04}s" onclick="startChat('${c.id}', '${c.username}')">
-                        ${getAvatar(c.username)}
+                        <div class="avatar-wrap">
+                            ${getAvatar(c.username)}
+                            <div class="online-dot ${c.online ? '' : 'offline'}"></div>
+                        </div>
                         <div class="info">
                             <b>${c.username}</b>
-                            <small>#${c.id}</small>
+                            <small>${c.online ? '🟢 онлайн' : '⚫ оффлайн'} · #${c.id}</small>
                         </div>
+                        ${c.unread > 0 ? `<div class="unread-badge">${c.unread > 99 ? '99+' : c.unread}</div>` : ''}
                     </div>`).join('')
                 : `<div style="text-align:center; color: var(--text-muted); padding: 40px; font-size: 0.85rem;">Нет чатов. Найди собеседника по ID ↑</div>`;
         }
@@ -808,16 +871,48 @@
             currentTargetId = id.toUpperCase();
             currentChatType = 'direct';
             document.getElementById('chat-target-name').innerText = name || '#' + id;
+            document.getElementById('chat-target-status').textContent = '';
             showScreen('chat-window');
             loadMessages();
+            updateChatStatus();
             if(window.msgInterval) clearInterval(window.msgInterval);
             window.msgInterval = setInterval(loadMessages, 2000);
+            if(window.statusInt) clearInterval(window.statusInt);
+            window.statusInt = setInterval(updateChatStatus, 15000);
+        }
+
+        async function updateChatStatus() {
+            if(!currentTargetId || currentChatType === 'group') return;
+            try {
+                const res = await fetch(`/api/status/${currentTargetId}`);
+                const data = await res.json();
+                const el = document.getElementById('chat-target-status');
+                if(data.online) {
+                    el.textContent = '● онлайн';
+                    el.className = 'chat-status online';
+                } else {
+                    el.textContent = data.lastSeen
+                        ? `был(а) ${timeAgo(data.lastSeen)}`
+                        : 'оффлайн';
+                    el.className = 'chat-status';
+                }
+            } catch(e) {}
+        }
+
+        function timeAgo(ts) {
+            const diff = Math.floor((Date.now() - ts) / 1000);
+            if(diff < 60) return 'только что';
+            if(diff < 3600) return `${Math.floor(diff/60)} мин. назад`;
+            if(diff < 86400) return `${Math.floor(diff/3600)} ч. назад`;
+            return `${Math.floor(diff/86400)} дн. назад`;
         }
 
         function showList() {
             currentTargetId = null;
             currentGroupId = null;
             clearInterval(window.msgInterval);
+            clearInterval(window.statusInt);
+            document.getElementById('chat-target-status').textContent = '';
             showScreen('list-screen');
             if(activeTab === 'chats') loadChatList();
             else loadGroupList();
