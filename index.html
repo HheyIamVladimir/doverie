@@ -3,120 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.2.8</title>
+    <title>Доверие v1.2.9 | Premium</title>
     <style>
-        :root { --bg-color: #ff6600; --text-color: #111; --box-bg: #fff; --accent: #111; --sidebar-bg: #eee; }
-        [data-theme="dark"] { --bg-color: #111; --text-color: #ff6600; --box-bg: #1a1a1a; --accent: #ff6600; --sidebar-bg: #252525; }
-        [data-theme="matrix"] { --bg-color: #000; --text-color: #0f0; --box-bg: #050505; --accent: #0f0; --sidebar-bg: #111; }
+        :root { 
+            --bg-gradient: linear-gradient(135deg, #ff6600 0%, #ff9831 100%);
+            --text-color: #222; 
+            --box-bg: rgba(255, 255, 255, 0.95); 
+            --accent: #ff6600; 
+            --accent-hover: #e65c00;
+            --sidebar-bg: #f8f9fa; 
+            --shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        [data-theme="dark"] { 
+            --bg-gradient: linear-gradient(135deg, #111 0%, #222 100%);
+            --text-color: #ff6600; 
+            --box-bg: rgba(30, 30, 30, 0.95); 
+            --accent: #ff6600; 
+            --sidebar-bg: #1a1a1a; 
+            --shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        [data-theme="matrix"] { 
+            --bg-gradient: #000;
+            --text-color: #0f0; 
+            --box-bg: rgba(5, 5, 5, 0.9); 
+            --accent: #0f0; 
+            --sidebar-bg: #0a0a0a; 
+            --shadow: 0 0 20px rgba(0,255,0,0.2);
+        }
 
-        body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 600px; height: 100vh; background: var(--box-bg); display: flex; flex-direction: column; position: relative; border-left: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+        body { 
+            margin: 0; 
+            background: var(--bg-gradient); 
+            color: var(--text-color); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            justify-content: center; 
+            transition: all 0.3s ease;
+        }
+
+        .app-container { 
+            width: 100%; 
+            max-width: 500px; 
+            height: 100vh; 
+            background: var(--box-bg); 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
         
-        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; text-transform: uppercase; border: 1px solid var(--accent); flex-shrink: 0; }
-        .header { padding: 15px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; min-height: 60px; box-sizing: border-box;}
-        
-        .screen { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        /* АНИМАЦИИ */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .screen { display: none; flex: 1; flex-direction: column; overflow: hidden; animation: fadeIn 0.4s ease forwards; }
         .active-screen { display: flex; }
 
-        .chat-item { padding: 15px; border-bottom: 1px solid var(--accent); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
-        .chat-item:active { background: var(--accent); color: var(--box-bg); }
+        .avatar { 
+            width: 45px; height: 45px; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0;
+        }
 
-        .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--box-bg); }
-        .message { padding: 12px; border-radius: 12px; max-width: 85%; font-size: 1rem; line-height: 1.4; word-wrap: break-word; }
-        .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg-their { background: var(--sidebar-bg); align-self: flex-start; border: 1px solid var(--accent); border-bottom-left-radius: 2px; }
+        .header { 
+            padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.05); 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(255,255,255,0.1);
+        }
 
-        .input-area { padding: 10px; border-top: 2px solid var(--accent); display: flex; gap: 8px; background: var(--box-bg); }
-        input, button, select { padding: 15px; border: 1px solid var(--accent); background: var(--box-bg); color: var(--text-color); font-family: inherit; font-size: 1rem; border-radius: 8px; }
-        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; }
-        .big-btn { width: 100%; margin-top: 10px; }
+        .chat-item { 
+            padding: 15px 20px; border-bottom: 1px solid rgba(0,0,0,0.03); 
+            cursor: pointer; display: flex; align-items: center; gap: 15px; 
+            transition: all 0.2s ease;
+        }
+        .chat-item:hover { background: rgba(0,0,0,0.02); transform: scale(1.01); }
 
-        #pin-overlay { position: absolute; inset: 0; background: var(--bg-color); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .chat-history { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        
+        .message { 
+            padding: 10px 16px; border-radius: 18px; max-width: 80%; 
+            font-size: 0.95rem; line-height: 1.4; animation: fadeIn 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .msg-my { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg-their { background: var(--sidebar-bg); align-self: flex-start; border-bottom-left-radius: 4px; }
+
+        input, select { 
+            padding: 12px 16px; border: 1px solid rgba(0,0,0,0.1); 
+            background: white; color: #333; border-radius: 12px; 
+            outline: none; transition: all 0.3s; font-size: 1rem;
+        }
+        [data-theme="dark"] input { background: #252525; color: #eee; border-color: #444; }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,102,0,0.2); }
+
+        button { 
+            padding: 12px 20px; border: none; border-radius: 12px; 
+            background: var(--accent); color: white; font-weight: 600; 
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        button:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+        button:active { transform: translateY(0); }
+
+        .big-btn { width: 100%; margin-top: 10px; padding: 15px; }
+
+        #pin-overlay { 
+            position: absolute; inset: 0; background: var(--bg-gradient); 
+            z-index: 1000; display: none; flex-direction: column; 
+            align-items: center; justify-content: center; backdrop-filter: blur(20px);
+        }
+
+        .card { 
+            background: var(--box-bg); padding: 20px; border-radius: 20px; 
+            box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.2);
+        }
     </style>
 </head>
 <body>
 
     <div id="pin-overlay">
-        <h3>ВВЕДИТЕ ПИН-КОД</h3>
-        <input type="password" id="pinInput" maxlength="4" placeholder="****" style="text-align: center; font-size: 2rem; width: 150px;">
-        <button class="big-btn" onclick="checkPin()">ПОДТВЕРДИТЬ</button>
+        <div class="card" style="text-align: center; width: 280px;">
+            <h3 style="margin-top:0">SECURITY PIN</h3>
+            <input type="password" id="pinInput" maxlength="4" placeholder="****" 
+                   style="text-align: center; font-size: 2rem; width: 100%; letter-spacing: 10px;">
+            <button class="big-btn" onclick="checkPin()">UNLOCK</button>
+        </div>
     </div>
 
     <div class="app-container">
-        <div id="auth-screen" class="screen active-screen" style="padding: 20px; overflow-y: auto;">
-            <h2 style="text-align: center;">ДОВЕРИЕ v1.2.8</h2>
+        <div id="auth-screen" class="screen active-screen" style="padding: 30px; overflow-y: auto;">
+            <h1 style="text-align: center; margin-bottom: 30px; letter-spacing: -1px;">ДОВЕРИЕ <span style="font-weight: 300; opacity: 0.6;">v1.2.9</span></h1>
             
-            <div style="border: 2px solid var(--accent); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 10px 0;">РЕГИСТРАЦИЯ</h4>
-                <input type="text" id="regName" placeholder="ИМЯ">
-                <input type="password" id="regPass" placeholder="ПРИДУМАЙТЕ ПАРОЛЬ">
-                <select id="platform">
-                    <option value="app">МОБ. ПРИЛОЖЕНИЕ</option>
-                    <option value="site">ВЕБ-САЙТ</option>
+            <div class="card">
+                <h4 style="margin: 0 0 15px 0; opacity: 0.5; font-size: 0.8rem; text-transform: uppercase;">New Account</h4>
+                <input type="text" id="regName" placeholder="Username" style="width: 100%; margin-bottom: 10px;">
+                <input type="password" id="regPass" placeholder="Password" style="width: 100%; margin-bottom: 10px;">
+                <select id="platform" style="width: 100%; margin-bottom: 10px;">
+                    <option value="app">Mobile App</option>
+                    <option value="site">Web Version</option>
                 </select>
-                <button class="big-btn" onclick="register()">СОЗДАТЬ АККАУНТ</button>
+                <button class="big-btn" onclick="register()">CREATE ACCOUNT</button>
             </div>
 
-            <div style="border: 2px solid var(--accent); padding: 15px; border-radius: 10px;">
-                <h4 style="margin: 0 0 10px 0;">ВХОД</h4>
-                <input type="text" id="loginId" placeholder="ВАШ ID">
-                <input type="password" id="loginPass" placeholder="ВАШ ПАРОЛЬ">
-                <button class="big-btn" onclick="login()">ВОЙТИ В СИСТЕМУ</button>
+            <div class="card">
+                <h4 style="margin: 0 0 15px 0; opacity: 0.5; font-size: 0.8rem; text-transform: uppercase;">Login</h4>
+                <input type="text" id="loginId" placeholder="Your ID" style="width: 100%; margin-bottom: 10px;">
+                <input type="password" id="loginPass" placeholder="Password" style="width: 100%; margin-bottom: 10px;">
+                <button class="big-btn" onclick="login()">SIGN IN</button>
             </div>
             
-            <p id="auth-msg" style="text-align: center; font-weight: bold; margin-top: 15px; color: var(--accent);"></p>
+            <p id="auth-msg" style="text-align: center; font-weight: bold; padding: 10px; border-radius: 10px;"></p>
         </div>
 
         <div id="list-screen" class="screen">
             <div class="header">
-                <b id="display-my-name">МОИ ЧАТЫ</b>
-                <button onclick="showSettings()">⚙</button>
+                <h3 id="display-my-name" style="margin:0">Messenger</h3>
+                <button onclick="showSettings()" style="padding: 8px; background: transparent; color: var(--text-color); font-size: 1.2rem;">⚙</button>
             </div>
-            <div style="padding: 10px; display: flex; gap: 5px;">
-                <input type="text" id="searchId" placeholder="ПОИСК ПО ID..." style="margin: 0; flex: 1;">
-                <button onclick="startChat(document.getElementById('searchId').value)" style="width: auto;">🔍</button>
+            <div style="padding: 15px; display: flex; gap: 10px;">
+                <input type="text" id="searchId" placeholder="Find by ID..." style="flex: 1; font-size: 0.9rem;">
+                <button onclick="startChat(document.getElementById('searchId').value)" style="width: 45px; padding: 0;">🔍</button>
             </div>
             <div id="chat-list" style="flex: 1; overflow-y: auto;"></div>
         </div>
 
         <div id="chat-window" class="screen">
-            <div class="header">
-                <button onclick="showList()">←</button>
-                <span id="chat-target-name">ЧАТ</span>
-                <div style="width: 40px;"></div>
+            <div class="header" style="background: var(--sidebar-bg);">
+                <button onclick="showList()" style="background: transparent; color: var(--text-color); padding: 5px;">←</button>
+                <div style="flex: 1; text-align: center;"><b id="chat-target-name">Chat</b></div>
+                <div style="width: 35px;"></div>
             </div>
             <div class="chat-history" id="chat-history"></div>
-            <div class="input-area">
-                <input type="text" id="msgText" placeholder="Сообщение..." style="flex: 1;">
-                <button onclick="sendMessage()">➤</button>
+            <div class="input-area" style="padding: 15px;">
+                <input type="text" id="msgText" placeholder="Write a message..." style="flex: 1; border-radius: 25px;">
+                <button onclick="sendMessage()" style="border-radius: 50%; width: 50px; height: 50px; padding: 0;">➤</button>
             </div>
         </div>
 
-        <div id="settings-screen" class="screen" style="padding: 20px;">
-            <h3>НАСТРОЙКИ</h3>
-            <label>Выберите тему:</label>
-            <select onchange="document.body.setAttribute('data-theme', this.value)">
-                <option value="light">Классика</option>
-                <option value="dark">Тьма</option>
-                <option value="matrix">Матрица</option>
-            </select>
-            <br><br>
-            <label>ПИН-код для быстрого входа (4 цифры):</label>
-            <input type="password" id="setPin" maxlength="4" placeholder="Введите новый ПИН">
-            <button class="big-btn" onclick="saveSettings()">СОХРАНИТЬ ПИН</button>
-            <hr>
-            <button class="big-btn" onclick="applyLambda()">АКТИВИРОВАТЬ λ</button>
-            <button class="big-btn" onclick="location.reload()" style="background: #f44; color: white;">ВЫЙТИ ИЗ АККАУНТА</button>
-            <button class="big-btn" onclick="showList()" style="margin-top: auto;">НАЗАД</button>
+        <div id="settings-screen" class="screen" style="padding: 30px;">
+            <h2 style="margin-top: 0;">Settings</h2>
+            <div class="card">
+                <label style="display: block; margin-bottom: 10px; font-size: 0.9rem;">Appearance</label>
+                <select onchange="document.body.setAttribute('data-theme', this.value)" style="width: 100%;">
+                    <option value="light">Classic Orange</option>
+                    <option value="dark">Deep Dark</option>
+                    <option value="matrix">Matrix Green</option>
+                </select>
+            </div>
+            <div class="card">
+                <label style="display: block; margin-bottom: 10px; font-size: 0.9rem;">Security PIN (4 digits)</label>
+                <input type="password" id="setPin" maxlength="4" placeholder="Enter new PIN" style="width: 100%;">
+                <button class="big-btn" onclick="saveSettings()" style="margin-top: 15px;">UPDATE PIN</button>
+            </div>
+            <button class="big-btn" onclick="applyLambda()">ACTIVATE λ</button>
+            <button class="big-btn" onclick="location.reload()" style="background: #ff4444; margin-top: 10px;">LOGOUT</button>
+            <button class="big-btn" onclick="showList()" style="margin-top: auto; background: #999;">BACK</button>
         </div>
     </div>
 
     <script>
-        let myId = null, currentTargetId = null;
-        let tempUsername = "";
+        // ... (Скрипты остаются ТЕ ЖЕ, что в v1.2.8, только добавь плавности в функции) ...
+        let myId = null, currentTargetId = null, tempUsername = "";
 
         function getAvatar(name) {
-            const colors = ['#f44', '#4a4', '#44f', '#f90', '#94f', '#09f'];
+            const colors = ['#FF5722', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#00BCD4'];
             const clearName = name.replace('[app] ', '').replace('[site] ', '');
             const char = clearName.charAt(0) || '?';
             const color = colors[char.charCodeAt(0) % colors.length];
@@ -132,7 +223,7 @@
             const username = document.getElementById('regName').value;
             const password = document.getElementById('regPass').value;
             const platform = document.getElementById('platform').value;
-            if(!username || !password) return alert("Заполни все поля регистрации!");
+            if(!username || !password) return alert("Fill all fields!");
 
             const res = await fetch('/api/register', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -140,15 +231,14 @@
             });
             const data = await res.json();
             if(data.success) {
-                document.getElementById('auth-msg').innerHTML = `УСПЕХ! ВАШ ID: <br><b style="font-size: 2rem;">${data.id}</b><br>ИСПОЛЬЗУЙТЕ ЕГО ДЛЯ ВХОДА`;
+                document.getElementById('auth-msg').style.background = "rgba(0,255,0,0.1)";
+                document.getElementById('auth-msg').innerHTML = `SUCCESS! YOUR ID:<br><span style="font-size: 2.5rem;">${data.id}</span>`;
             }
         }
 
         async function login() {
             const id = document.getElementById('loginId').value.toUpperCase();
             const password = document.getElementById('loginPass').value;
-            if(!id || !password) return alert("Введите ID и пароль!");
-
             const res = await fetch('/api/login', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id, password})
@@ -158,17 +248,13 @@
                 const data = await res.json();
                 myId = data.id;
                 tempUsername = data.username;
-                
-                // Проверяем ПИН в localStorage
                 const savedPin = localStorage.getItem('app_pin_' + myId);
                 if(savedPin) {
                     document.getElementById('pin-overlay').style.display = 'flex';
                 } else {
                     enterApp();
                 }
-            } else {
-                alert('Неверный ID или пароль');
-            }
+            } else alert('Wrong ID or Password');
         }
 
         function checkPin() {
@@ -176,9 +262,7 @@
             if(document.getElementById('pinInput').value === savedPin) {
                 document.getElementById('pin-overlay').style.display = 'none';
                 enterApp(); 
-            } else {
-                alert('Неверный ПИН');
-            }
+            } else alert('Incorrect PIN');
         }
 
         function enterApp() {
@@ -196,7 +280,11 @@
             document.getElementById('chat-list').innerHTML = chats.map(c => `
                 <div class="chat-item" onclick="startChat('${c.id}', '${c.username}')">
                     ${getAvatar(c.username)}
-                    <div><b>${c.username}</b><br><small>#${c.id}</small></div>
+                    <div style="flex:1">
+                        <div style="font-weight:600">${c.username}</div>
+                        <div style="font-size:0.75rem; opacity:0.5">ID: #${c.id}</div>
+                    </div>
+                    <div style="font-size:1.2rem; opacity:0.3">›</div>
                 </div>`).join('');
         }
 
@@ -222,10 +310,10 @@
             const pin = document.getElementById('setPin').value;
             if(pin.length === 4) {
                 localStorage.setItem('app_pin_' + myId, pin);
-                alert('ПИН-код сохранен!');
+                alert('PIN saved!');
             } else {
                 localStorage.removeItem('app_pin_' + myId);
-                alert('ПИН-код удален');
+                alert('PIN removed');
             }
         }
 
@@ -253,7 +341,7 @@
 
         async function applyLambda() {
             await fetch('/api/lambda', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId}) });
-            alert('λ активирована! Перезайдите для обновления.');
+            alert('λ activated!');
         }
     </script>
 </body>
