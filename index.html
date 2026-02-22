@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Доверие</title>
+    <style>
+        :root {
+            --bg-color: #ff6600;
+            --text-color: #111;
+            --box-bg: #fff;
+            --accent: #111;
+            --sidebar-bg: #eee;
+        }
+        [data-theme="dark"] {
+            --bg-color: #111;
+            --text-color: #ff6600;
+            --box-bg: #1a1a1a;
+            --accent: #ff6600;
+            --sidebar-bg: #252525;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg-color); color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; transition: background 0.3s;
+            overflow: hidden;
+        }
+
+        /* --- НОВОЕ ИНТРО --- */
+        #intro {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ff6600; color: #111;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 1s;
+        }
+        .intro-title { font-size: 2.5rem; font-weight: bold; opacity: 0; transition: 1s; }
+        .intro-sub { position: absolute; bottom: 40px; font-size: 0.9rem; opacity: 0; transition: 1.5s; }
+
+        /* --- ИНТЕРФЕЙС --- */
+        .app-container { 
+            display: none; width: 95%; max-width: 1000px; height: 90vh; 
+            background: var(--box-bg); border: 2px solid var(--accent); 
+            display: flex; flex-direction: column; overflow: hidden; 
+        }
+        .header { padding: 10px 20px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; background: var(--box-bg); }
+        
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* Боковая панель (Список чатов) */
+        .sidebar { 
+            width: 250px; border-right: 2px solid var(--accent); 
+            background: var(--sidebar-bg); display: flex; flex-direction: column; 
+        }
+        .sidebar-header { padding: 10px; font-weight: bold; border-bottom: 1px solid var(--accent); text-align: center; }
+        #chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 15px 10px; border-bottom: 1px solid var(--accent); cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        .chat-item:hover { background: var(--bg-color); color: var(--text-color); }
+        .chat-item.active { background: var(--accent); color: var(--box-bg); }
+
+        /* Основная область чата */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--box-bg); }
+        #auth-screen { display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%; }
+        #chat-screen { display: none; flex-direction: column; height: 100%; }
+
+        .search-bar { padding: 10px; border-bottom: 1px solid var(--accent); display: flex; gap: 5px; }
+        .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        
+        /* Сообщения */
+        .message { padding: 10px; border-radius: 5px; max-width: 75%; font-size: 0.9rem; position: relative; }
+        .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; border-bottom-right-radius: 0; }
+        .msg-their { background: var(--sidebar-bg); border: 1px solid var(--accent); align-self: flex-start; border-bottom-left-radius: 0; }
+
+        .chat-input { display: flex; padding: 15px; border-top: 1px solid var(--accent); gap: 10px; }
+        input, button { padding: 8px; border: 1px solid var(--accent); background: transparent; color: var(--text-color); font-family: inherit; }
+        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; }
+        
+        input#searchId { width: 100px; }
+        input#msgText { flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div id="intro">
+        <div class="intro-title" id="introTitle">Мессенджер Доверие</div>
+        <div class="intro-sub" id="introSub">пока что только на бумаге*</div>
+    </div>
+
+    <div class="app-container" id="app" style="display: none;">
+        <div class="header">
+            <span id="my-info">ДОВЕРИЕ / СТАНЦИЯ</span>
+            <button onclick="toggleTheme()">ТЕМА ◐</button>
+        </div>
+
+        <div class="main-layout">
+            <div class="sidebar">
+                <div class="sidebar-header">ЧАТЫ</div>
+                <div id="chat-list">
+                    </div>
+            </div>
+
+            <div class="chat-area">
+                <div id="auth-screen">
+                    <h3 style="margin-bottom: 20px;">ДОСТУП</h3>
+                    <input type="text" id="username" placeholder="ИМЯ (ДЛЯ РЕГИСТРАЦИИ)">
+                    <input type="text" id="loginId" placeholder="ВАШ ID (ДЛЯ ВХОДА)">
+                    <input type="password" id="password" placeholder="ПАРОЛЬ">
+                    <div style="margin-top: 15px;">
+                        <button onclick="register()">СОЗДАТЬ ID</button>
+                        <button onclick="login()">ВОЙТИ</button>
+                    </div>
+                    <p id="auth-msg" style="font-size: 0.8rem; margin-top: 20px;"></p>
+                </div>
+
+                <div id="chat-screen">
+                    <div class="search-bar">
+                        <input type="text" id="searchId" placeholder="ID...">
+                        <button onclick="searchAndStart()">НАЙТИ</button>
+                        <span id="current-chat-info" style="font-size: 0.8rem; align-self: center; margin-left: 10px; opacity: 0.7;"></span>
+                    </div>
+                    <div class="chat-history" id="chat-history"></div>
+                    <div class="chat-input">
+                        <input type="text" id="msgText" placeholder="Написать сообщение...">
+                        <button onclick="sendMessage()">ОТПРАВИТЬ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- АНИМАЦИЯ ИНТРО ---
+        window.onload = () => {
+            const title = document.getElementById('introTitle');
+            const sub = document.getElementById('introSub');
+            setTimeout(() => { title.style.opacity = '1'; }, 500);
+            setTimeout(() => { sub.style.opacity = '1'; }, 1500);
+            setTimeout(() => { 
+                document.getElementById('intro').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('intro').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                }, 1000);
+            }, 3500);
+        };
+
+        let myId = null;
+        let currentChatId = null;
+        let refreshInterval = null;
+
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            body.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+        }
+
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if(!username || !password) return alert('Заполни поля!');
+            const res = await fetch('/api/register', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            const data = await res.json();
+            if(data.success) document.getElementById('auth-msg').innerText = `ID СОЗДАН: ${data.id}`;
+        }
+
+        async function login() {
+            const id = document.getElementById('loginId').value.toUpperCase();
+            const password = document.getElementById('password').value;
+            const res = await fetch('/api/login', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, password})
+            });
+            const data = await res.json();
+            if(data.success) {
+                myId = data.id;
+                document.getElementById('my-info').innerText = `ID: ${myId}`;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'flex';
+                loadChatList();
+                setInterval(loadChatList, 5000); // Обновлять список чатов раз в 5 сек
+            } else alert(data.error);
+        }
+
+        async function loadChatList() {
+            if(!myId) return;
+            const res = await fetch(`/api/chats/${myId}`);
+            const chats = await res.json();
+            const list = document.getElementById('chat-list');
+            list.innerHTML = chats.map(c => `
+                <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="selectChat('${c.id}', '${c.username}')">
+                    ${c.username} <br> <span style="font-size: 0.6rem; opacity: 0.6;">#${c.id}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectChat(id, username) {
+            currentChatId = id;
+            document.getElementById('current-chat-info').innerText = `@${username}`;
+            loadMessages();
+            if(refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(loadMessages, 2000);
+            loadChatList();
+        }
+
+        async function searchAndStart() {
+            const id = document.getElementById('searchId').value.toUpperCase();
+            const res = await fetch(`/api/users/${id}`);
+            const data = await res.json();
+            if(data.success) selectChat(data.id, data.username);
+            else alert('Пользователь не найден');
+        }
+
+        async function sendMessage() {
+            const text = document.getElementById('msgText').value;
+            if(!text || !currentChatId) return;
+            await fetch('/api/messages', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({fromId: myId, toId: currentChatId, text})
+            });
+            document.getElementById('msgText').value = '';
+            loadMessages();
+            loadChatList();
+        }
+
+        async function loadMessages() {
+            if(!currentChatId) return;
+            const res = await fetch(`/api/messages/${myId}/${currentChatId}`);
+            const messages = await res.json();
+            const history = document.getElementById('chat-history');
+            const isAtBottom = history.scrollHeight - history.scrollTop <= history.clientHeight + 50;
+            
+            history.innerHTML = messages.map(m => `
+                <div class="message ${m.fromId === myId ? 'msg-my' : 'msg-their'}">${m.text}</div>
+            `).join('');
+
+            if(isAtBottom) history.scrollTop = history.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
