@@ -10,18 +10,23 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // Инициализация базы данных
-let db = { users: [], messages: [], lastId: 1000 };
+let db = { users: [], messages: [], groups: [], groupMessages: [], lastId: 1000, lastGroupId: 100 };
 
 function loadDB() {
     try {
         if (fs.existsSync(DATA_FILE)) {
             const data = fs.readFileSync(DATA_FILE, 'utf8');
-            return JSON.parse(data);
+            const parsed = JSON.parse(data);
+            // Совместимость со старой БД без групп
+            if (!parsed.groups) parsed.groups = [];
+            if (!parsed.groupMessages) parsed.groupMessages = [];
+            if (!parsed.lastGroupId) parsed.lastGroupId = 100;
+            return parsed;
         }
     } catch (e) {
         console.error("[DB] Ошибка загрузки, создаю новую базу.");
     }
-    return { users: [], messages: [], lastId: 1000 };
+    return { users: [], messages: [], groups: [], groupMessages: [], lastId: 1000, lastGroupId: 100 };
 }
 
 function saveDB() {
@@ -32,9 +37,18 @@ function saveDB() {
     }
 }
 
+// Генерация уникального ID группы (формат: GRP-XXXXX)
+function generateGroupId() {
+    db.lastGroupId++;
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let suffix = '';
+    for (let i = 0; i < 5; i++) suffix += chars[Math.floor(Math.random() * chars.length)];
+    return `GRP-${suffix}`;
+}
+
 db = loadDB();
 
-// --- API ЭНДПОИНТЫ ---
+// ==================== ПОЛЬЗОВАТЕЛИ ====================
 
 // Регистрация
 app.post('/api/register', (req, res) => {
@@ -61,11 +75,13 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// ==================== ЛИЧНЫЕ ЧАТЫ ====================
+
 // Список чатов (кто писал мне или кому писал я)
 app.get('/api/chats/:myId', (req, res) => {
     const myId = req.params.myId;
     const chattedIds = new Set();
-    
+
     db.messages.forEach(m => {
         if (m.fromId === myId) chattedIds.add(m.toId);
         if (m.toId === myId) chattedIds.add(m.fromId);
@@ -74,28 +90,132 @@ app.get('/api/chats/:myId', (req, res) => {
     const activeChats = db.users
         .filter(u => chattedIds.has(u.id))
         .map(u => ({ id: u.id, username: u.username }));
-    
+
     res.json(activeChats);
 });
 
-// Сообщения
+// Отправить личное сообщение
 app.post('/api/messages', (req, res) => {
     const { fromId, toId, text } = req.body;
-    if (!text) return res.json({ success: false });
+    if (!text || !fromId || !toId) return res.json({ success: false });
 
     db.messages.push({ fromId, toId, text, time: Date.now() });
     saveDB();
     res.json({ success: true });
 });
 
+// Получить историю личных сообщений
 app.get('/api/messages/:myId/:otherId', (req, res) => {
     const { myId, otherId } = req.params;
-    const history = db.messages.filter(m => 
-        (m.fromId === myId && m.toId === otherId) || 
+    const history = db.messages.filter(m =>
+        (m.fromId === myId && m.toId === otherId) ||
         (m.fromId === otherId && m.toId === myId)
     );
     res.json(history);
 });
+
+// ==================== ГРУППЫ ====================
+
+// Создать группу
+app.post('/api/groups', (req, res) => {
+    const { name, creatorId } = req.body;
+    if (!name || !creatorId) return res.status(400).json({ success: false, error: 'Нет имени или создателя' });
+
+    const creator = db.users.find(u => u.id === creatorId);
+    if (!creator) return res.status(404).json({ success: false, error: 'Пользователь не найден' });
+
+    const groupId = generateGroupId();
+    const group = {
+        id: groupId,
+        name: name.trim(),
+        creatorId,
+        members: [creatorId],
+        createdAt: Date.now()
+    };
+
+    db.groups.push(group);
+    saveDB();
+    console.log(`[GROUPS] Создана группа "${name}" (${groupId}) пользователем ${creatorId}`);
+    res.json({ success: true, groupId });
+});
+
+// Вступить в группу
+app.post('/api/groups/join', (req, res) => {
+    const { groupId, userId } = req.body;
+    if (!groupId || !userId) return res.status(400).json({ success: false, error: 'Нет данных' });
+
+    const group = db.groups.find(g => g.id === groupId.toUpperCase());
+    if (!group) return res.status(404).json({ success: false, error: 'Группа не найдена' });
+
+    if (group.members.includes(userId)) {
+        return res.json({ success: true, alreadyMember: true });
+    }
+
+    group.members.push(userId);
+    saveDB();
+    console.log(`[GROUPS] Пользователь ${userId} вступил в группу ${groupId}`);
+    res.json({ success: true });
+});
+
+// Список групп пользователя
+app.get('/api/groups/:userId', (req, res) => {
+    const { userId } = req.params;
+    const userGroups = db.groups
+        .filter(g => g.members.includes(userId))
+        .map(g => ({
+            id: g.id,
+            name: g.name,
+            creatorId: g.creatorId,
+            memberCount: g.members.length,
+            createdAt: g.createdAt
+        }));
+    res.json(userGroups);
+});
+
+// Инфо о конкретной группе
+app.get('/api/groups/info/:groupId', (req, res) => {
+    const group = db.groups.find(g => g.id === req.params.groupId.toUpperCase());
+    if (!group) return res.status(404).json({ success: false, error: 'Не найдена' });
+    res.json({
+        id: group.id,
+        name: group.name,
+        memberCount: group.members.length,
+        createdAt: group.createdAt
+    });
+});
+
+// ==================== СООБЩЕНИЯ ГРУПП ====================
+
+// Отправить сообщение в группу
+app.post('/api/group-messages', (req, res) => {
+    const { fromId, groupId, text } = req.body;
+    if (!fromId || !groupId || !text) return res.status(400).json({ success: false });
+
+    const group = db.groups.find(g => g.id === groupId);
+    if (!group) return res.status(404).json({ success: false, error: 'Группа не найдена' });
+    if (!group.members.includes(fromId)) return res.status(403).json({ success: false, error: 'Ты не в этой группе' });
+
+    const sender = db.users.find(u => u.id === fromId);
+    const fromName = sender ? sender.username : fromId;
+
+    db.groupMessages.push({ fromId, fromName, groupId, text, time: Date.now() });
+    saveDB();
+    res.json({ success: true });
+});
+
+// Получить историю сообщений группы
+app.get('/api/group-messages/:groupId', (req, res) => {
+    const { groupId } = req.params;
+
+    // Проверка: только участники могут читать (опционально можно добавить auth)
+    const messages = db.groupMessages
+        .filter(m => m.groupId === groupId)
+        .slice(-200); // последние 200 сообщений
+
+    res.json(messages);
+});
+
+// ==================== ПРОЧЕЕ ====================
 
 // Лямбда
 app.post('/api/lambda', (req, res) => {
@@ -104,16 +224,17 @@ app.post('/api/lambda', (req, res) => {
         user.username += ' λ';
         saveDB();
         res.json({ success: true });
-    } else res.json({ success: false });
+    } else {
+        res.json({ success: false });
+    }
 });
 
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.2.7 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v1.3.0 ЗАПУЩЕН
     Порт: ${PORT}
-    Память: 500MB Limit Ready
+    Группы: включены ✓
     ======================================
     `);
 });
-
