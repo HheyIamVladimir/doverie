@@ -2,105 +2,132 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-
 const PORT = process.env.PORT || 8080;
-const DB_FILE = path.join(__dirname, 'database.json');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
-// --- Инициализация БД ---
-if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify({ users: {}, messages: [] }));
+const DATA_FILE = './database.json';
+
+// --- РАБОТА С БАЗОЙ ДАННЫХ ---
+function loadDB() {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const data = fs.readFileSync(DATA_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error("Ошибка чтения базы:", e);
+    }
+    return { users: [], messages: [], lastId: 1000 };
 }
 
-function readDB() {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+function saveDB() {
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+    } catch (e) {
+        console.error("Ошибка сохранения базы:", e);
+    }
 }
 
-function writeDB(data) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
+let db = loadDB();
 
-// --- API: Регистрация и Вход ---
+// --- ЭНДПОИНТЫ ---
+
+// Регистрация с выбором платформы
 app.post('/api/register', (req, res) => {
-    const { username, password } = req.body;
-    const db = readDB();
-    const id = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const { username, password, platform } = req.body;
+    if (!username || !password) return res.json({ success: false, error: 'Заполни все поля!' });
+
+    db.lastId++;
+    const newId = db.lastId.toString();
     
-    db.users[id] = { id, username, password };
-    writeDB(db);
-    res.json({ success: true, id, username });
+    // Формируем ник с меткой платформы
+    const prefix = platform === 'app' ? '[app]' : '[site]';
+    const finalName = `${prefix} ${username}`;
+
+    const newUser = { id: newId, username: finalName, password };
+    db.users.push(newUser);
+    saveDB();
+
+    res.json({ success: true, id: newId });
 });
 
-app.post('/api/login', (req, res) => {
-    const { id, password } = req.body;
-    const db = readDB();
-    const user = db.users[id];
-    if (user && user.password === password) {
-        res.json({ success: true, id: user.id, username: user.username });
+// Активация Лямбды (HL2 Easter Egg)
+app.post('/api/lambda', (req, res) => {
+    const { id } = req.body;
+    const user = db.users.find(u => u.id === id);
+    if (user) {
+        if (!user.username.includes('λ')) {
+            user.username += ' λ';
+            saveDB();
+            res.json({ success: true });
+        } else {
+            res.json({ success: true, msg: 'Уже активировано' });
+        }
     } else {
-        res.status(401).json({ success: false, error: 'Неверный ID или пароль' });
+        res.json({ success: false });
     }
 });
 
-// --- API: Поиск и Чаты ---
-app.get('/api/users/:id', (req, res) => {
-    const db = readDB();
-    const user = db.users[req.params.id];
+// Вход
+app.post('/api/login', (req, res) => {
+    const { id, password } = req.body;
+    const user = db.users.find(u => u.id === id && u.password === password);
     if (user) {
         res.json({ success: true, id: user.id, username: user.username });
     } else {
-        res.status(404).json({ success: false, error: 'ID не найден' });
+        res.json({ success: false, error: 'Неверный ID или пароль' });
     }
 });
 
-// НОВОЕ: Эндпоинт для получения списка контактов (Sidebar)
-app.get('/api/chats/:id', (req, res) => {
-    const db = readDB();
-    const myId = req.params.id;
-    const interlocutors = new Set();
-
-    // Сканируем сообщения, чтобы найти всех собеседников
-    db.messages.forEach(m => {
-        if (m.fromId === myId) interlocutors.add(m.toId);
-        if (m.toId === myId) interlocutors.add(m.fromId);
-    });
-
-    const chatList = Array.from(interlocutors).map(id => ({
-        id,
-        username: db.users[id] ? db.users[id].username : "Unknown User"
-    }));
-    res.json(chatList);
+// Поиск пользователя по ID
+app.get('/api/users/:id', (req, res) => {
+    const user = db.users.find(u => u.id === req.params.id);
+    if (user) {
+        res.json({ success: true, id: user.id, username: user.username });
+    } else {
+        res.json({ success: false });
+    }
 });
 
-// --- API: Сообщения ---
+// Отправка сообщения
 app.post('/api/messages', (req, res) => {
     const { fromId, toId, text } = req.body;
-    const db = readDB();
-    const msg = { fromId, toId, text, time: new Date().toISOString() };
-    db.messages.push(msg);
-    writeDB(db);
-    res.json({ success: true, message: msg });
+    const newMessage = { fromId, toId, text, time: Date.now() };
+    db.messages.push(newMessage);
+    saveDB();
+    res.json({ success: true });
 });
 
-app.get('/api/messages/:user1/:user2', (req, res) => {
-    const { user1, user2 } = req.params;
-    const db = readDB();
+// Получение истории переписки
+app.get('/api/messages/:myId/:otherId', (req, res) => {
+    const { myId, otherId } = req.params;
     const chat = db.messages.filter(m => 
-        (m.fromId === user1 && m.toId === user2) || 
-        (m.fromId === user2 && m.toId === user1)
+        (m.fromId === myId && m.toId === otherId) || 
+        (m.fromId === otherId && m.toId === myId)
     );
     res.json(chat);
 });
 
-// --- Обработка путей ---
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// Список активных чатов
+app.get('/api/chats/:myId', (req, res) => {
+    const myId = req.params.myId;
+    const chattedIds = new Set();
+    
+    db.messages.forEach(m => {
+        if (m.fromId === myId) chattedIds.add(m.toId);
+        if (m.toId === myId) chattedIds.add(m.fromId);
+    });
+
+    const chats = db.users
+        .filter(u => chattedIds.has(u.id))
+        .map(u => ({ id: u.id, username: u.username }));
+    
+    res.json(chats);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n[SYSTEM]: Мессенджер "Доверие" в эфире.`);
-    console.log(`[LINK]: http://localhost:${PORT}\n`);
+app.listen(PORT, () => {
+    console.log(`=== СЕРВЕР v1.2 ЗАПУЩЕН НА ПОРТУ ${PORT} ===`);
 });
 
