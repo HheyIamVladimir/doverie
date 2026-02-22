@@ -3,127 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.2</title>
+    <title>Доверие v1.2.1</title>
     <style>
-        /* ОСНОВНЫЕ ПЕРЕМЕННЫЕ И ТЕМЫ */
-        :root {
-            --bg-color: #ff6600; --text-color: #111; --box-bg: #fff; --accent: #111; --sidebar-bg: #eee; --radius: 8px;
-        }
-        [data-theme="dark"] { 
-            --bg-color: #111; --text-color: #ff6600; --box-bg: #1a1a1a; --accent: #ff6600; --sidebar-bg: #252525; 
-        }
-        [data-theme="neon"] { 
-            --bg-color: #000; --text-color: #0ff; --box-bg: #050505; --accent: #0ff; --sidebar-bg: #111; 
-        }
-        [data-theme="matrix"] { 
-            --bg-color: #000; --text-color: #0f0; --box-bg: #050505; --accent: #0f0; --sidebar-bg: #111; 
-        }
-        [data-theme="blood"] { 
-            --bg-color: #200; --text-color: #f00; --box-bg: #100; --accent: #f00; --sidebar-bg: #1a0000; 
-        }
-        [data-theme="ice"] { 
-            --bg-color: #e0f7fa; --text-color: #006064; --box-bg: #fff; --accent: #00bcd4; --sidebar-bg: #f0fdfa; 
-        }
-        [data-theme="gold"] { 
-            --bg-color: #1a1a1a; --text-color: #ffd700; --box-bg: #222; --accent: #ffd700; --sidebar-bg: #2a2a2a; 
-        }
+        /* ПЕРЕМЕННЫЕ И ТЕМЫ (ОСТАВИЛ БЕЗ ИЗМЕНЕНИЙ) */
+        :root { --bg-color: #ff6600; --text-color: #111; --box-bg: #fff; --accent: #111; --sidebar-bg: #eee; --radius: 8px; }
+        [data-theme="dark"] { --bg-color: #111; --text-color: #ff6600; --box-bg: #1a1a1a; --accent: #ff6600; --sidebar-bg: #252525; }
+        [data-theme="neon"] { --bg-color: #000; --text-color: #0ff; --box-bg: #050505; --accent: #0ff; --sidebar-bg: #111; }
+        [data-theme="matrix"] { --bg-color: #000; --text-color: #0f0; --box-bg: #050505; --accent: #0f0; --sidebar-bg: #111; }
+        [data-theme="blood"] { --bg-color: #200; --text-color: #f00; --box-bg: #100; --accent: #f00; --sidebar-bg: #1a0000; }
+        [data-theme="ice"] { --bg-color: #e0f7fa; --text-color: #006064; --box-bg: #fff; --accent: #00bcd4; --sidebar-bg: #f0fdfa; }
+        [data-theme="gold"] { --bg-color: #1a1a1a; --text-color: #ffd700; --box-bg: #222; --accent: #ffd700; --sidebar-bg: #2a2a2a; }
 
         body {
-            margin: 0; padding: 0;
-            background: var(--bg-color); color: var(--text-color);
-            font-family: 'Courier New', Courier, monospace;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; transition: background 0.3s, color 0.3s;
-            overflow: hidden;
+            margin: 0; padding: 0; background: var(--bg-color); color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center;
+            height: 100vh; transition: 0.3s; overflow: hidden;
         }
 
-        /* --- ИНТРО --- */
         #intro {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #ff6600; color: #111;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; transition: opacity 1s;
+            background: #ff6600; color: #111; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 9999; transition: 1s;
         }
-        .intro-title { font-size: 2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; padding: 20px; }
+        .intro-title { font-size: 2rem; font-weight: bold; opacity: 0; transition: 1s; text-align: center; }
         .intro-sub { position: absolute; bottom: 40px; font-size: 0.8rem; opacity: 0; transition: 1.5s; }
 
-        /* --- ИНТЕРФЕЙС --- */
         .app-container { 
             display: none; width: 95%; max-width: 1000px; height: 90vh; 
             background: var(--box-bg); border: 2px solid var(--accent); 
-            display: flex; flex-direction: column; overflow: hidden; 
-            position: relative; box-shadow: 15px 15px 0px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
         
-        .header { 
-            padding: 10px 15px; border-bottom: 2px solid var(--accent); 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: var(--box-bg); z-index: 10;
-        }
-        
-        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .header { padding: 10px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; background: var(--box-bg); }
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
 
-        /* Боковая панель */
-        .sidebar { 
-            width: 250px; border-right: 2px solid var(--accent); 
-            background: var(--sidebar-bg); display: flex; flex-direction: column; 
-            transition: 0.3s; z-index: 20;
-        }
-        .sidebar-header { padding: 12px; font-weight: bold; border-bottom: 1px solid var(--accent); text-align: center; font-size: 0.8rem; letter-spacing: 1px; }
+        .sidebar { width: 250px; border-right: 2px solid var(--accent); background: var(--sidebar-bg); display: flex; flex-direction: column; transition: 0.3s; }
         #chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 15px 10px; border-bottom: 1px solid var(--accent); cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
-        .chat-item:hover { background: var(--bg-color); color: var(--text-color); }
+        .chat-item { padding: 12px 10px; border-bottom: 1px solid var(--accent); cursor: pointer; font-size: 0.8rem; }
         .chat-item.active { background: var(--accent); color: var(--box-bg); }
 
-        /* Область чата */
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--box-bg); min-width: 0; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--box-bg); }
         
-        /* ВХОД */
-        #auth-screen { 
-            display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%;
-            background: radial-gradient(circle at center, var(--sidebar-bg) 0%, var(--box-bg) 100%);
+        /* --- ОБНОВЛЕННЫЙ ЭКРАН ВХОДА --- */
+        #auth-screen { display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center; height: 100%; }
+        .auth-card { 
+            background: var(--sidebar-bg); padding: 25px; border: 2px solid var(--accent); 
+            border-radius: 8px; width: 100%; max-width: 300px; box-shadow: 8px 8px 0px var(--accent);
         }
-        .auth-card {
-            background: var(--sidebar-bg); padding: 30px; border: 2px solid var(--accent);
-            border-radius: var(--radius); box-shadow: 8px 8px 0px var(--accent);
-            width: 100%; max-width: 280px;
-        }
+        .auth-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--accent); padding-bottom: 10px; }
+        .tab-btn { background: none; color: var(--text-color); border: none; cursor: pointer; opacity: 0.5; padding: 5px; }
+        .tab-btn.active { opacity: 1; font-weight: bold; border-bottom: 2px solid var(--accent); }
 
         #chat-screen { display: none; flex-direction: column; height: 100%; }
-
-        .search-bar { padding: 10px; border-bottom: 1px solid var(--accent); display: flex; gap: 5px; background: var(--sidebar-bg); }
-        .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
-        
-        /* Сообщения */
-        .message { padding: 10px 14px; border-radius: 12px; max-width: 80%; font-size: 0.85rem; line-height: 1.4; position: relative; }
+        .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .message { padding: 8px 12px; border-radius: 8px; max-width: 80%; font-size: 0.85rem; }
         .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; border-bottom-right-radius: 0; }
         .msg-their { background: var(--sidebar-bg); border: 1px solid var(--accent); align-self: flex-start; border-bottom-left-radius: 0; }
-        .msg-time { font-size: 0.6rem; opacity: 0.6; margin-top: 4px; display: block; text-align: right; }
 
-        .chat-input { display: flex; padding: 12px; border-top: 1px solid var(--accent); gap: 8px; background: var(--box-bg); }
-        
-        input, button, select { 
-            padding: 10px; border: 1px solid var(--accent); background: var(--box-bg); 
-            color: var(--text-color); font-family: inherit; border-radius: 4px; outline: none;
-        }
-        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; transition: 0.2s; border: none; }
-        button:active { transform: scale(0.95); }
-        
-        input#searchId { width: 70px; }
-        input#msgText { flex: 1; }
+        .chat-input { display: flex; padding: 10px; border-top: 1px solid var(--accent); gap: 5px; }
+        input, button, select { padding: 10px; border: 1px solid var(--accent); background: var(--box-bg); color: var(--text-color); font-family: inherit; }
+        button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; }
 
-        /* НАСТРОЙКИ */
-        #settings-screen {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--box-bg); z-index: 100; flex-direction: column; padding: 25px; box-sizing: border-box;
-        }
+        #settings-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--box-bg); z-index: 100; flex-direction: column; padding: 20px; box-sizing: border-box;}
 
-        /* --- АДАПТИВНОСТЬ --- */
+        .hidden { display: none !important; }
+
         @media (max-width: 600px) {
-            .sidebar { position: absolute; left: -100%; z-index: 50; height: 100%; width: 85%; }
+            .sidebar { position: absolute; left: -100%; z-index: 50; height: 100%; width: 80%; }
             .sidebar.open { left: 0; box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
-            .header { font-size: 0.8rem; }
-            .auth-card { width: 80%; padding: 20px; }
         }
     </style>
 </head>
@@ -137,7 +84,7 @@
     <div class="app-container" id="app">
         <div class="header">
             <button onclick="toggleSidebar()">☰</button>
-            <span id="my-info">ЗАГРУЗКА...</span>
+            <span id="my-info">СТАНЦИЯ</span>
             <div>
                 <button onclick="toggleSettings()">⚙</button>
             </div>
@@ -145,65 +92,66 @@
 
         <div class="main-layout">
             <div id="settings-screen">
-                <h2 style="border-bottom: 2px solid var(--accent); padding-bottom: 10px;">КОНФИГУРАЦИЯ</h2>
-                <p>ВАШ ID: <b id="settings-id" style="color: var(--accent);">----</b></p>
-                
-                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-                    <label style="font-size: 0.8rem;">ВЫБОР ТЕМЫ:</label>
-                    <select id="theme-select" onchange="changeTheme(this.value)" style="width: 100%;">
-                        <option value="light">КЛАССИКА (ОРАНЖ)</option>
-                        <option value="dark">ТЬМА</option>
-                        <option value="neon">НЕОН</option>
-                        <option value="matrix">МАТРИЦА</option>
-                        <option value="blood">КРОВЬ</option>
-                        <option value="ice">ЛЕД</option>
-                        <option value="gold">ЗОЛОТО</option>
-                    </select>
-
-                    <button onclick="applyLambda()" style="background: transparent; color: var(--accent); border: 1px solid var(--accent);">АКТИВИРОВАТЬ λ (HL2)</button>
-                    <button onclick="location.reload()" style="margin-top: 20px;">ВЫЙТИ ИЗ СИСТЕМЫ</button>
+                <h2>НАСТРОЙКИ</h2>
+                <p>Ваш ID: <b id="settings-id">----</b></p>
+                <label>Тема:</label>
+                <select id="theme-select" onchange="changeTheme(this.value)">
+                    <option value="light">Классика</option>
+                    <option value="dark">Тьма</option>
+                    <option value="neon">Неон</option>
+                    <option value="matrix">Матрица</option>
+                    <option value="blood">Кровь</option>
+                    <option value="ice">Лёд</option>
+                    <option value="gold">Золото</option>
+                </select>
+                <div style="margin-top: 20px;">
+                    <button onclick="applyLambda()">АКТИВИРОВАТЬ λ (HL2)</button>
                 </div>
-                
-                <button onclick="toggleSettings()" style="margin-top: auto; width: 100%;">← НАЗАД</button>
+                <button onclick="location.reload()" style="margin-top: 20px;">ВЫХОД</button>
+                <button onclick="toggleSettings()" style="margin-top: auto;">← НАЗАД</button>
             </div>
 
             <div class="sidebar" id="sidebar">
-                <div class="sidebar-header">АКТИВНЫЕ КАНАЛЫ</div>
                 <div id="chat-list"></div>
             </div>
 
             <div class="chat-area">
                 <div id="auth-screen">
                     <div class="auth-card">
-                        <h3 style="margin-top: 0; text-align: center; letter-spacing: 2px;">ДОСТУП</h3>
-                        <input type="text" id="username" placeholder="ИМЯ" style="width: 100%; margin-bottom: 8px; box-sizing: border-box;">
-                        
-                        <label style="font-size: 0.6rem; display: block; margin-bottom: 4px;">ПЛАТФОРМА:</label>
-                        <select id="platform" style="width: 100%; margin-bottom: 12px;">
-                            <option value="site">САЙТ [site]</option>
-                            <option value="app">ПРИЛОЖЕНИЕ [app]</option>
-                        </select>
-
-                        <input type="text" id="loginId" placeholder="ID (ДЛЯ ВХОДА)" style="width: 100%; margin-bottom: 8px; box-sizing: border-box;">
-                        <input type="password" id="password" placeholder="ПАРОЛЬ" style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
-                        
-                        <div style="display: flex; gap: 5px;">
-                            <button onclick="register()" style="flex: 1;">РЕГ</button>
-                            <button onclick="login()" style="flex: 2;">ВОЙТИ</button>
+                        <div class="auth-tabs">
+                            <button id="tab-login" class="tab-btn active" onclick="switchAuth('login')">ВХОД</button>
+                            <button id="tab-reg" class="tab-btn" onclick="switchAuth('reg')">РЕГИСТРАЦИЯ</button>
                         </div>
-                        <p id="auth-msg" style="font-size: 0.65rem; text-align: center; margin-top: 15px; color: var(--accent); min-height: 1rem;"></p>
+
+                        <div id="form-login">
+                            <input type="text" id="loginId" placeholder="ВАШ ID" style="width: 100%; margin-bottom: 10px; box-sizing: border-box;">
+                            <input type="password" id="loginPass" placeholder="ПАРОЛЬ" style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
+                            <button onclick="login()" style="width: 100%;">ВОЙТИ</button>
+                        </div>
+
+                        <div id="form-reg" class="hidden">
+                            <input type="text" id="regName" placeholder="ИМЯ" style="width: 100%; margin-bottom: 10px; box-sizing: border-box;">
+                            <select id="platform" style="width: 100%; margin-bottom: 10px;">
+                                <option value="site">Я НА САЙТЕ [site]</option>
+                                <option value="app">Я В ПРИЛОЖЕНИИ [app]</option>
+                            </select>
+                            <input type="password" id="regPass" placeholder="ПАРОЛЬ" style="width: 100%; margin-bottom: 15px; box-sizing: border-box;">
+                            <button onclick="register()" style="width: 100%;">СОЗДАТЬ АККАУНТ</button>
+                        </div>
+
+                        <p id="auth-msg" style="font-size: 0.8rem; text-align: center; margin-top: 15px; font-weight: bold; color: var(--accent);"></p>
                     </div>
                 </div>
 
                 <div id="chat-screen">
-                    <div class="search-bar">
+                    <div class="chat-input" style="border-bottom: 1px solid var(--accent); border-top: none;">
                         <input type="text" id="searchId" placeholder="ID...">
                         <button onclick="searchAndStart()">ЧАТ</button>
-                        <span id="current-chat-info" style="font-size: 0.75rem; align-self: center; margin-left: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
+                        <span id="current-chat-info" style="font-size: 0.7rem; margin-left: 5px;"></span>
                     </div>
                     <div class="chat-history" id="chat-history"></div>
                     <div class="chat-input">
-                        <input type="text" id="msgText" placeholder="Введите сообщение...">
+                        <input type="text" id="msgText" placeholder="Сообщение...">
                         <button onclick="sendMessage()">➤</button>
                     </div>
                 </div>
@@ -218,28 +166,30 @@
             setTimeout(() => { document.getElementById('introSub').style.opacity = '1'; }, 1500);
             setTimeout(() => { 
                 document.getElementById('intro').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('intro').style.display = 'none';
-                    document.getElementById('app').style.display = 'flex';
-                }, 1000);
+                setTimeout(() => { document.getElementById('intro').style.display = 'none'; document.getElementById('app').style.display = 'flex'; }, 1000);
             }, 3000);
         };
 
         let myId = null;
         let currentChatId = null;
-        let chatUpdateInterval = null;
-        let listUpdateInterval = null;
 
         function changeTheme(theme) { document.body.setAttribute('data-theme', theme); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function toggleSettings() {
             const s = document.getElementById('settings-screen');
-            const isVisible = s.style.display === 'flex';
-            s.style.display = isVisible ? 'none' : 'flex';
+            s.style.display = (s.style.display === 'flex' ? 'none' : 'flex');
             if(myId) document.getElementById('settings-id').innerText = myId;
         }
 
-        // ЛЯМБДА ФУНКЦИЯ
+        // Переключатель вкладок
+        function switchAuth(type) {
+            document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
+            document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
+            document.getElementById('tab-login').classList.toggle('active', type === 'login');
+            document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
+            document.getElementById('auth-msg').innerText = ''; // Чистим сообщения при переключении
+        }
+
         async function applyLambda() {
             if(!myId) return;
             const res = await fetch('/api/lambda', {
@@ -247,14 +197,14 @@
                 body: JSON.stringify({id: myId})
             });
             const data = await res.json();
-            if(data.success) alert('СИМВОЛ λ ДОБАВЛЕН. ОБНОВИТЕ СТРАНИЦУ ДЛЯ ПРИМЕНЕНИЯ.');
+            if(data.success) alert('Лямбда λ активирована! Перезайдите в чат.');
         }
 
         async function register() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('regName').value;
+            const password = document.getElementById('regPass').value;
             const platform = document.getElementById('platform').value;
-            if(!username || !password) return alert('ЗАПОЛНИТЕ ВСЕ ПОЛЯ');
+            if(!username || !password) return alert('Заполни все поля!');
             
             const res = await fetch('/api/register', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -262,13 +212,14 @@
             });
             const data = await res.json();
             if(data.success) {
-                document.getElementById('auth-msg').innerText = `ВАШ ID: ${data.id} (ЗАПОМНИТЕ!)`;
-            } else alert(data.error);
+                // ПОКАЗЫВАЕМ ID ЖИРНО И КРАСИВО
+                document.getElementById('auth-msg').innerHTML = `АККАУНТ СОЗДАН!<br><span style="font-size: 1.2rem;">ВАШ ID: ${data.id}</span><br>Теперь перейдите во вкладку ВХОД`;
+            }
         }
 
         async function login() {
             const id = document.getElementById('loginId').value.toUpperCase();
-            const password = document.getElementById('password').value;
+            const password = document.getElementById('loginPass').value;
             const res = await fetch('/api/login', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id, password})
@@ -279,39 +230,35 @@
                 document.getElementById('my-info').innerText = data.username;
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
-                loadChatList();
-                listUpdateInterval = setInterval(loadChatList, 5000);
-            } else alert(data.error || 'ОШИБКА ДОСТУПА');
+                loadChatList(); setInterval(loadChatList, 5000);
+            } else alert('Неверный ID или пароль');
         }
 
         async function loadChatList() {
             if(!myId) return;
             const res = await fetch(`/api/chats/${myId}`);
             const chats = await res.json();
-            const list = document.getElementById('chat-list');
-            list.innerHTML = chats.map(c => `
+            document.getElementById('chat-list').innerHTML = chats.map(c => `
                 <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="selectChat('${c.id}', '${c.username}')">
-                    <b>${c.username}</b> <br> <span style="font-size: 0.6rem; opacity: 0.6;">#${c.id}</span>
+                    <b>${c.username}</b><br><small>#${c.id}</small>
                 </div>
             `).join('');
         }
 
         function selectChat(id, username) {
             currentChatId = id;
-            document.getElementById('current-chat-info').innerText = `@${username}`;
+            document.getElementById('current-chat-info').innerText = username;
             document.getElementById('sidebar').classList.remove('open');
             loadMessages();
-            if(chatUpdateInterval) clearInterval(chatUpdateInterval);
-            chatUpdateInterval = setInterval(loadMessages, 2000);
+            setInterval(loadMessages, 2000);
         }
 
         async function searchAndStart() {
             const id = document.getElementById('searchId').value.toUpperCase();
-            if(!id || id === myId) return;
             const res = await fetch(`/api/users/${id}`);
             const data = await res.json();
             if(data.success) selectChat(data.id, data.username);
-            else alert('ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН');
+            else alert('Пользователь не найден');
         }
 
         async function sendMessage() {
@@ -330,11 +277,9 @@
             const res = await fetch(`/api/messages/${myId}/${currentChatId}`);
             const messages = await res.json();
             const history = document.getElementById('chat-history');
-            
             history.innerHTML = messages.map(m => `
                 <div class="message ${m.fromId === myId ? 'msg-my' : 'msg-their'}">
-                    ${m.text}
-                    <span class="msg-time">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    ${m.text} <br><small style="font-size: 0.6rem; opacity: 0.7;">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
                 </div>
             `).join('');
             history.scrollTop = history.scrollHeight;
