@@ -3,28 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.2 (Rollback)</title>
+    <title>Доверие v1.2.5</title>
     <style>
+        /* ТЕМЫ */
         :root { --bg-color: #ff6600; --text-color: #111; --box-bg: #fff; --accent: #111; --sidebar-bg: #eee; }
         [data-theme="dark"] { --bg-color: #111; --text-color: #ff6600; --box-bg: #1a1a1a; --accent: #ff6600; --sidebar-bg: #252525; }
+        [data-theme="neon"] { --bg-color: #000; --text-color: #0ff; --box-bg: #050505; --accent: #0ff; --sidebar-bg: #111; }
+        [data-theme="matrix"] { --bg-color: #000; --text-color: #0f0; --box-bg: #050505; --accent: #0f0; --sidebar-bg: #111; }
+
         body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .app-container { width: 95%; max-width: 800px; height: 90vh; background: var(--box-bg); border: 2px solid var(--accent); display: flex; flex-direction: column; }
+        
+        .app-container { width: 95%; max-width: 900px; height: 90vh; background: var(--box-bg); border: 2px solid var(--accent); display: flex; flex-direction: column; position: relative;}
+        
         .header { padding: 10px; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        
+        .main-layout { display: flex; flex: 1; overflow: hidden; }
+        
+        /* СПИСОК ЧАТОВ */
+        .sidebar { width: 200px; border-right: 2px solid var(--accent); background: var(--sidebar-bg); overflow-y: auto; display: none; flex-direction: column; }
+        .chat-item { padding: 10px; border-bottom: 1px solid var(--accent); cursor: pointer; font-size: 0.8rem; }
+        .chat-item:hover { background: var(--accent); color: var(--box-bg); }
+
+        .chat-area { flex: 1; display: flex; flex-direction: column; position: relative; }
+
         #auth-screen { padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        #chat-screen { display: none; flex-direction: column; height: 100%; }
+        #chat-screen { display: none; flex: 1; flex-direction: column; height: 100%; }
+        
         .chat-history { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .message { padding: 8px 12px; border-radius: 8px; max-width: 80%; font-size: 0.85rem; }
         .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; }
         .msg-their { background: var(--sidebar-bg); align-self: flex-start; border: 1px solid var(--accent); }
+        
         input, button, select { padding: 10px; border: 1px solid var(--accent); background: var(--box-bg); color: var(--text-color); margin-bottom: 10px; width: 100%; box-sizing: border-box; }
         button { cursor: pointer; background: var(--accent); color: var(--box-bg); font-weight: bold; }
-        .hidden { display: none; }
+
+        /* НАСТРОЙКИ */
+        #settings-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--box-bg); z-index: 10; padding: 20px; box-sizing: border-box; flex-direction: column; }
     </style>
 </head>
 <body>
     <div class="app-container">
+        <div id="settings-screen">
+            <h3>НАСТРОЙКИ</h3>
+            <label>Выберите тему:</label>
+            <select onchange="document.body.setAttribute('data-theme', this.value)">
+                <option value="light">Классика</option>
+                <option value="dark">Тьма</option>
+                <option value="neon">Неон</option>
+                <option value="matrix">Матрица</option>
+            </select>
+            <button onclick="applyLambda()">АКТИВИРОВАТЬ λ</button>
+            <button onclick="toggleSettings()" style="margin-top: auto;">← НАЗАД</button>
+        </div>
+
         <div id="auth-screen">
-            <h2>ДОВЕРИЕ v1.2</h2>
+            <h2>ДОВЕРИЕ v1.2.5</h2>
             <div style="width: 100%; max-width: 300px;">
                 <input type="text" id="regName" placeholder="ИМЯ (для регистрации)">
                 <select id="platform">
@@ -42,20 +75,39 @@
         <div id="chat-screen">
             <div class="header">
                 <span id="my-name">---</span>
-                <button onclick="location.reload()" style="width: auto; margin: 0; padding: 5px 10px;">ВЫХОД</button>
+                <div>
+                    <button onclick="toggleSettings()" style="width: auto; margin: 0; padding: 5px 10px;">⚙</button>
+                    <button onclick="location.reload()" style="width: auto; margin: 0; padding: 5px 10px;">ВЫХОД</button>
+                </div>
             </div>
-            <div class="chat-history" id="chat-history"></div>
-            <div style="padding: 10px; display: flex; gap: 5px;">
-                <input type="text" id="targetId" placeholder="Кому ID..." style="margin: 0;">
-                <input type="text" id="msgText" placeholder="Сообщение..." style="margin: 0;">
-                <button onclick="sendMessage()" style="width: auto; margin: 0;">➤</button>
+            
+            <div class="main-layout">
+                <div class="sidebar" id="chat-list-sidebar">
+                    <div style="padding: 5px; font-size: 0.6rem; opacity: 0.6;">АКТИВНЫЕ ЧАТЫ:</div>
+                    <div id="chat-list"></div>
+                </div>
+                
+                <div class="chat-area">
+                    <div class="chat-history" id="chat-history"></div>
+                    <div style="padding: 10px; display: flex; gap: 5px;">
+                        <input type="text" id="targetId" placeholder="Кому ID..." style="margin: 0; width: 80px;">
+                        <input type="text" id="msgText" placeholder="Сообщение..." style="margin: 0;">
+                        <button onclick="sendMessage()" style="width: auto; margin: 0;">➤</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let myId = null;
-        let currentInterval = null;
+        let msgInterval = null;
+        let chatListInterval = null;
+
+        function toggleSettings() {
+            const s = document.getElementById('settings-screen');
+            s.style.display = (s.style.display === 'flex' ? 'none' : 'flex');
+        }
 
         async function register() {
             const username = document.getElementById('regName').value;
@@ -84,8 +136,32 @@
                 document.getElementById('my-name').innerText = data.username + " #" + myId;
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('chat-screen').style.display = 'flex';
-                currentInterval = setInterval(loadMessages, 2000);
+                document.getElementById('chat-list-sidebar').style.display = 'flex'; // Показываем список чатов
+                
+                msgInterval = setInterval(loadMessages, 2000);
+                chatListInterval = setInterval(loadChatList, 4000);
+                loadChatList();
             } else { alert('Ошибка входа'); }
+        }
+
+        async function loadChatList() {
+            if(!myId) return;
+            const res = await fetch(`/api/chats/${myId}`);
+            const chats = await res.json();
+            const list = document.getElementById('chat-list');
+            list.innerHTML = chats.map(c => `
+                <div class="chat-item" onclick="document.getElementById('targetId').value='${c.id}'; loadMessages();">
+                    <b>${c.username}</b><br><small>#${c.id}</small>
+                </div>
+            `).join('');
+        }
+
+        async function applyLambda() {
+            await fetch('/api/lambda', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: myId})
+            });
+            alert('λ активирована! Перезайдите для обновления ника.');
         }
 
         async function sendMessage() {
@@ -98,6 +174,7 @@
             });
             document.getElementById('msgText').value = '';
             loadMessages();
+            loadChatList(); // Обновляем список чатов сразу после отправки
         }
 
         async function loadMessages() {
