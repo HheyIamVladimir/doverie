@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -27,7 +26,6 @@
         .msg-my { background: var(--accent); color: var(--box-bg); align-self: flex-end; border-bottom-right-radius: 2px; }
         .msg-their { background: var(--sidebar-bg); align-self: flex-start; border: 1px solid var(--accent); border-bottom-left-radius: 2px; }
 
-        /* ОПРОСЫ */
         .poll-box { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-top: 5px; border: 1px dashed var(--accent); }
         .poll-opt { background: var(--box-bg); border: 1px solid var(--accent); margin: 5px 0; padding: 8px; cursor: pointer; text-align: center; border-radius: 5px; font-weight: bold; }
         #poll-creator { position: absolute; bottom: 80px; left: 10px; right: 10px; background: var(--box-bg); border: 3px solid var(--accent); padding: 15px; display: none; flex-direction: column; z-index: 100; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.3); }
@@ -59,7 +57,7 @@
                     <option value="app">МОБ. ПРИЛОЖЕНИЕ</option>
                     <option value="site">ВЕБ-САЙТ</option>
                 </select>
-                <button class="big-btn" onclick="register()">СОЗДАТЬ АККАУНТ</button>
+                <button class="big-btn" id="regBtn" onclick="register()">СОЗДАТЬ АККАУНТ</button>
             </div>
             <div style="border: 2px solid var(--accent); padding: 15px; border-radius: 10px;">
                 <h4 style="margin: 0 0 10px 0;">ВХОД</h4>
@@ -67,7 +65,7 @@
                 <input type="password" id="loginPass" placeholder="ВАШ ПАРОЛЬ" style="width:100%; box-sizing:border-box; margin-bottom:5px;">
                 <button class="big-btn" onclick="login()">ВОЙТИ В СИСТЕМУ</button>
             </div>
-            <p id="auth-msg" style="text-align: center; font-weight: bold; margin-top: 15px;"></p>
+            <p id="auth-msg" style="text-align: center; font-weight: bold; margin-top: 15px; color: var(--accent);"></p>
         </div>
 
         <div id="list-screen" class="screen">
@@ -94,98 +92,93 @@
                 <span id="chat-target-name">ЧАТ</span>
                 <div style="width: 40px;"></div>
             </div>
-
             <div id="poll-creator">
-                <b style="text-align:center; display:block; margin-bottom:10px;">📊 НОВЫЙ ОПРОС</b>
-                <input type="text" id="pollQ" placeholder="Вопрос опроса..." style="width:100%; margin-bottom:5px;">
-                <input type="text" id="poll1" placeholder="Вариант 1" style="width:100%; margin-bottom:5px;">
-                <input type="text" id="poll2" placeholder="Вариант 2" style="width:100%; margin-bottom:5px;">
-                <input type="text" id="poll3" placeholder="Вариант 3" style="width:100%; margin-bottom:10px;">
-                <div style="display:flex; gap:5px;">
-                    <button onclick="sendPoll()" style="flex:1">ОТПРАВИТЬ</button>
-                    <button onclick="document.getElementById('poll-creator').style.display='none'" style="background:#f44; color:white;">ОТМЕНА</button>
-                </div>
+                <b>📊 НОВЫЙ ОПРОС</b>
+                <input type="text" id="pollQ" placeholder="Вопрос...">
+                <input type="text" id="poll1" placeholder="Вариант 1">
+                <input type="text" id="poll2" placeholder="Вариант 2">
+                <button onclick="sendPoll()">ОТПРАВИТЬ</button>
+                <button onclick="togglePollCreator()">ОТМЕНА</button>
             </div>
-
             <div class="chat-history" id="chat-history"></div>
-            
             <div class="input-area">
                 <button onclick="togglePollCreator()">📊</button>
-                <input type="text" id="msgText" placeholder="Сообщение..." style="flex: 1;">
+                <input type="text" id="msgText" placeholder="Сообщение...">
                 <button onclick="sendMessage()">➤</button>
             </div>
         </div>
 
         <div id="settings-screen" class="screen" style="padding: 20px;">
             <h3>НАСТРОЙКИ</h3>
-            <label>Тема:</label>
             <select onchange="document.body.setAttribute('data-theme', this.value)" style="width:100%">
                 <option value="light">Классика</option>
                 <option value="dark">Тьма</option>
                 <option value="matrix">Матрица</option>
             </select>
-            <br><br>
-            <label>ПИН-код (4 цифры):</label>
-            <input type="password" id="setPin" maxlength="4" placeholder="Введите ПИН" style="width:100%">
+            <input type="password" id="setPin" maxlength="4" placeholder="Новый ПИН">
             <button class="big-btn" onclick="saveSettings()">СОХРАНИТЬ ПИН</button>
-            <hr>
-            <button class="big-btn" onclick="applyLambda()">АКТИВИРОВАТЬ λ</button>
-            <button class="big-btn" onclick="location.reload()" style="background: #f44; color: white;">ВЫЙТИ</button>
-            <button class="big-btn" onclick="showList()" style="margin-top: auto;">НАЗАД</button>
+            <button class="big-btn" onclick="location.reload()" style="background: #f44;">ВЫЙТИ</button>
+            <button class="big-btn" onclick="showList()">НАЗАД</button>
         </div>
     </div>
 
     <script>
         let myId = null, currentTargetId = null, tempUsername = "";
 
-        function getAvatar(name) {
-            const colors = ['#f44', '#4a4', '#44f', '#f90', '#94f', '#09f'];
-            const clearName = name.replace('[app] ', '').replace('[site] ', '').replace('👥 ', '');
-            const char = clearName.charAt(0) || '?';
-            const color = colors[char.charCodeAt(0) % colors.length];
-            return `<div class="avatar" style="background:${color}">${char}</div>`;
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-            document.getElementById(id).classList.add('active-screen');
-        }
-
+        // Улучшенная регистрация с логами
         async function register() {
             const username = document.getElementById('regName').value;
             const password = document.getElementById('regPass').value;
             const platform = document.getElementById('platform').value;
-            if(!username || !password) return alert("Заполни всё!");
-            const res = await fetch('/api/register', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({username, password, platform})
-            });
-            const data = await res.json();
-            if(data.success) document.getElementById('auth-msg').innerHTML = `ID: <b style="font-size: 2rem;">${data.id}</b>`;
+            const msgEl = document.getElementById('auth-msg');
+            const btn = document.getElementById('regBtn');
+
+            if(!username || !password) return alert("Заполни все поля!");
+            
+            msgEl.innerText = "⏳ Соединение с сервером...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password, platform})
+                });
+                
+                if (!res.ok) throw new Error("Сервер ответил ошибкой: " + res.status);
+                
+                const data = await res.json();
+                
+                if(data.success) {
+                    msgEl.innerHTML = `ТВОЙ ID: <br><b style="font-size: 2.5rem; color: #ff6600;">${data.id}</b><br><span style="color:red">ЗАПИШИ ЕГО!</span>`;
+                } else {
+                    msgEl.innerText = "❌ Ошибка: " + (data.error || "не удалось создать");
+                }
+            } catch (err) {
+                console.error(err);
+                msgEl.innerText = "❌ ОШИБКА СВЯЗИ. Проверь статус Render.";
+                alert("Не удалось связаться с сервером. Возможно, он еще просыпается. Подожди 30 секунд и нажми еще раз.");
+            } finally {
+                btn.disabled = false;
+            }
         }
 
         async function login() {
             const id = document.getElementById('loginId').value.toUpperCase();
             const password = document.getElementById('loginPass').value;
-            const res = await fetch('/api/login', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id, password})
-            });
-            if(res.ok) {
-                const data = await res.json();
-                myId = data.id; tempUsername = data.username;
-                const savedPin = localStorage.getItem('app_pin_' + myId);
-                if(savedPin) document.getElementById('pin-overlay').style.display = 'flex';
-                else enterApp();
-            } else alert('Ошибка входа');
-        }
-
-        function checkPin() {
-            const savedPin = localStorage.getItem('app_pin_' + myId);
-            if(document.getElementById('pinInput').value === savedPin) {
-                document.getElementById('pin-overlay').style.display = 'none';
-                enterApp(); 
-            } else alert('Неверно');
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id, password})
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    myId = data.id; tempUsername = data.username;
+                    const savedPin = localStorage.getItem('app_pin_' + myId);
+                    if(savedPin) document.getElementById('pin-overlay').style.display = 'flex';
+                    else enterApp();
+                } else alert('Неверный ID или пароль');
+            } catch(e) { alert("Сервер недоступен"); }
         }
 
         function enterApp() {
@@ -195,15 +188,27 @@
             setInterval(loadChatList, 5000);
         }
 
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        }
+
+        function getAvatar(name) {
+            const char = name.replace('[app] ', '').replace('[site] ', '').charAt(0) || '?';
+            return `<div class="avatar" style="background:#44f">${char}</div>`;
+        }
+
         async function loadChatList() {
             if(!myId || currentTargetId) return;
-            const res = await fetch(`/api/chats/${myId}`);
-            const chats = await res.json();
-            document.getElementById('chat-list').innerHTML = chats.map(c => `
-                <div class="chat-item" onclick="startChat('${c.id}', '${c.username}')">
-                    ${getAvatar(c.username)}
-                    <div><b>${c.username}</b><br><small>#${c.id}</small></div>
-                </div>`).join('');
+            try {
+                const res = await fetch(`/api/chats/${myId}`);
+                const chats = await res.json();
+                document.getElementById('chat-list').innerHTML = chats.map(c => `
+                    <div class="chat-item" onclick="startChat('${c.id}', '${c.username}')">
+                        ${getAvatar(c.username)}
+                        <div><b>${c.username}</b><br><small>#${c.id}</small></div>
+                    </div>`).join('');
+            } catch(e) {}
         }
 
         function startChat(id, name) {
@@ -213,62 +218,18 @@
             showScreen('chat-window');
             loadMessages();
             if(window.msgInterval) clearInterval(window.msgInterval);
-            window.msgInterval = setInterval(loadMessages, 2000);
+            window.msgInterval = setInterval(loadMessages, 2500);
         }
 
-        function showList() { currentTargetId = null; clearInterval(window.msgInterval); showScreen('list-screen'); }
-        function showSettings() { showScreen('settings-screen'); }
-        function togglePollCreator() { 
-            const el = document.getElementById('poll-creator');
-            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        function saveSettings() {
-            const pin = document.getElementById('setPin').value;
-            if(pin.length === 4) { localStorage.setItem('app_pin_' + myId, pin); alert('ОК'); }
-            else { localStorage.removeItem('app_pin_' + myId); alert('Удалено'); }
-        }
-
-        async function createGroup() {
-            const name = prompt("Имя группы:");
-            if(!name) return;
-            const res = await fetch('/api/groups/create', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name, creatorId: myId})
-            });
-            const data = await res.json();
-            alert("Группа " + data.groupId + " создана!");
-            loadChatList();
-        }
-
-        async function joinGroup() {
-            const groupId = prompt("Введите ID (G-XXXX):");
-            if(!groupId) return;
-            await fetch('/api/groups/join', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({groupId, userId: myId})
-            });
-            loadChatList();
-        }
-
-        async function sendPoll() {
-            const q = document.getElementById('pollQ').value;
-            const o = [document.getElementById('poll1').value, document.getElementById('poll2').value, document.getElementById('poll3').value].filter(v => v);
-            if(!q || o.length < 2) return alert("Нужен вопрос и мин. 2 варианта");
-            await fetch('/api/messages', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({fromId: myId, toId: currentTargetId, type: 'poll', question: q, options: o})
-            });
-            document.getElementById('poll-creator').style.display = 'none';
-            loadMessages();
-        }
-
-        async function vote(msgId, optionIdx) {
-            await fetch('/api/poll/vote', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({msgId, optionIdx})
-            });
-            loadMessages();
+        async function loadMessages() {
+            if(!currentTargetId) return;
+            const res = await fetch(`/api/messages/${myId}/${currentTargetId}`);
+            const messages = await res.json();
+            const history = document.getElementById('chat-history');
+            history.innerHTML = messages.map(m => `
+                <div class="message ${m.fromId === myId ? 'msg-my' : 'msg-their'}">${m.text || '📊 Опрос'}</div>
+            `).join('');
+            history.scrollTop = history.scrollHeight;
         }
 
         async function sendMessage() {
@@ -282,32 +243,24 @@
             loadMessages();
         }
 
-        async function loadMessages() {
-            if(!currentTargetId) return;
-            const res = await fetch(`/api/messages/${myId}/${currentTargetId}`);
-            const messages = await res.json();
-            const history = document.getElementById('chat-history');
-            history.innerHTML = messages.map(m => {
-                const isMy = m.fromId === myId;
-                if(m.type === 'poll') {
-                    return `<div class="message ${isMy ? 'msg-my' : 'msg-their'}">
-                        <b>📊 ОПРОС: ${m.question}</b>
-                        <div class="poll-box">
-                            ${m.options.map((opt, i) => `
-                                <div class="poll-opt" onclick="vote(${m.id}, ${i})">${opt} <br> [ ${m.votes ? m.votes[i] : 0} ]</div>
-                            `).join('')}
-                        </div>
-                    </div>`;
-                }
-                return `<div class="message ${isMy ? 'msg-my' : 'msg-their'}">${m.text}</div>`;
-            }).join('');
-            history.scrollTop = history.scrollHeight;
+        function showList() { currentTargetId = null; showScreen('list-screen'); }
+        function showSettings() { showScreen('settings-screen'); }
+        function togglePollCreator() { 
+            const el = document.getElementById('poll-creator');
+            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
         }
-
-        async function applyLambda() {
-            await fetch('/api/lambda', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: myId}) });
-            alert('λ!');
+        function checkPin() {
+            if(document.getElementById('pinInput').value === localStorage.getItem('app_pin_' + myId)) {
+                document.getElementById('pin-overlay').style.display = 'none';
+                enterApp();
+            } else alert('Ошибка');
+        }
+        function saveSettings() {
+            const pin = document.getElementById('setPin').value;
+            if(pin.length === 4) localStorage.setItem('app_pin_' + myId, pin);
+            alert("Сохранено");
         }
     </script>
 </body>
 </html>
+
