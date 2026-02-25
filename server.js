@@ -10,23 +10,26 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // Инициализация базы данных
-let db = { users: [], messages: [], groups: [], groupMessages: [], lastId: 1000, lastGroupId: 100 };
+let db = { users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0 };
 
 function loadDB() {
     try {
         if (fs.existsSync(DATA_FILE)) {
             const data = fs.readFileSync(DATA_FILE, 'utf8');
             const parsed = JSON.parse(data);
-            // Совместимость со старой БД без групп
             if (!parsed.groups) parsed.groups = [];
             if (!parsed.groupMessages) parsed.groupMessages = [];
             if (!parsed.lastGroupId) parsed.lastGroupId = 100;
+            if (!parsed.channels) parsed.channels = [];
+            if (!parsed.channelPosts) parsed.channelPosts = [];
+            if (!parsed.channelComments) parsed.channelComments = [];
+            if (!parsed.lastChannelId) parsed.lastChannelId = 0;
             return parsed;
         }
     } catch (e) {
         console.error("[DB] Ошибка загрузки, создаю новую базу.");
     }
-    return { users: [], messages: [], groups: [], groupMessages: [], lastId: 1000, lastGroupId: 100 };
+    return { users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0 };
 }
 
 function saveDB() {
@@ -271,6 +274,127 @@ app.get('/api/group-messages/:groupId', (req, res) => {
     res.json(messages);
 });
 
+// ==================== КАНАЛЫ ====================
+
+// Генерация ID канала (формат D-XXXX)
+function generateChannelId() {
+    db.lastChannelId++;
+    const num = String(db.lastChannelId).padStart(4, '0');
+    return `D-${num}`;
+}
+
+// Создать канал
+app.post('/api/channels', (req, res) => {
+    const { name, desc, ownerId } = req.body;
+    if (!name || !ownerId) return res.status(400).json({ success: false, error: 'Нет данных' });
+    const owner = db.users.find(u => u.id === ownerId);
+    if (!owner) return res.status(404).json({ success: false, error: 'Пользователь не найден' });
+
+    const channelId = generateChannelId();
+    db.channels.push({
+        id: channelId,
+        name: name.trim(),
+        desc: (desc || '').trim(),
+        ownerId,
+        subscribers: [ownerId],
+        createdAt: Date.now()
+    });
+    saveDB();
+    console.log(`[CHANNELS] Создан канал "${name}" (${channelId}) пользователем ${ownerId}`);
+    res.json({ success: true, channelId });
+});
+
+// Подписаться на канал
+app.post('/api/channels/subscribe', (req, res) => {
+    const { channelId, userId } = req.body;
+    if (!channelId || !userId) return res.status(400).json({ success: false, error: 'Нет данных' });
+    const channel = db.channels.find(c => c.id === channelId.toUpperCase());
+    if (!channel) return res.status(404).json({ success: false, error: 'Канал не найден' });
+    if (channel.subscribers.includes(userId)) return res.json({ success: true, alreadySubscribed: true });
+    channel.subscribers.push(userId);
+    saveDB();
+    res.json({ success: true });
+});
+
+// Список каналов пользователя (подписан или владелец)
+app.get('/api/channels/:userId', (req, res) => {
+    const { userId } = req.params;
+    // Проверяем что это не запрос инфо о канале
+    if (userId.startsWith('D-') || userId.startsWith('d-')) return res.status(400).json([]);
+    const userChannels = db.channels
+        .filter(c => c.subscribers.includes(userId))
+        .map(c => ({
+            id: c.id,
+            name: c.name,
+            desc: c.desc,
+            ownerId: c.ownerId,
+            subCount: c.subscribers.length
+        }));
+    res.json(userChannels);
+});
+
+// Инфо о канале
+app.get('/api/channels/info/:channelId', (req, res) => {
+    const channel = db.channels.find(c => c.id === req.params.channelId.toUpperCase());
+    if (!channel) return res.status(404).json({ success: false, error: 'Не найден' });
+    res.json({ id: channel.id, name: channel.name, desc: channel.desc, ownerId: channel.ownerId, subCount: channel.subscribers.length });
+});
+
+// Опубликовать пост в канал
+app.post('/api/channels/:channelId/posts', (req, res) => {
+    const { channelId } = req.params;
+    const { authorId, text } = req.body;
+    if (!authorId || !text) return res.status(400).json({ success: false });
+    const channel = db.channels.find(c => c.id === channelId);
+    if (!channel) return res.status(404).json({ success: false, error: 'Канал не найден' });
+    if (channel.ownerId !== authorId) return res.status(403).json({ success: false, error: 'Только владелец может публиковать' });
+
+    const author = db.users.find(u => u.id === authorId);
+    const postId = `P-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+    db.channelPosts.push({ id: postId, channelId, authorId, authorName: author ? author.username : authorId, text, time: Date.now() });
+    saveDB();
+    res.json({ success: true, postId });
+});
+
+// Получить посты канала
+app.get('/api/channels/:channelId/posts', (req, res) => {
+    const { channelId } = req.params;
+    const posts = db.channelPosts
+        .filter(p => p.channelId === channelId)
+        .slice(-50)
+        .map(p => ({
+            ...p,
+            commentCount: db.channelComments.filter(c => c.postId === p.id).length
+        }));
+    res.json(posts);
+});
+
+// Добавить комментарий к посту
+app.post('/api/channels/posts/:postId/comments', (req, res) => {
+    const { postId } = req.params;
+    const { authorId, text } = req.body;
+    if (!authorId || !text) return res.status(400).json({ success: false });
+    const post = db.channelPosts.find(p => p.id === postId);
+    if (!post) return res.status(404).json({ success: false, error: 'Пост не найден' });
+    const author = db.users.find(u => u.id === authorId);
+    db.channelComments.push({
+        id: `C-${Date.now()}`,
+        postId,
+        authorId,
+        authorName: author ? author.username : authorId,
+        text,
+        time: Date.now()
+    });
+    saveDB();
+    res.json({ success: true });
+});
+
+// Получить комментарии поста
+app.get('/api/channels/posts/:postId/comments', (req, res) => {
+    const comments = db.channelComments.filter(c => c.postId === req.params.postId);
+    res.json(comments);
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -288,11 +412,12 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.4.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v1.5.0 ЗАПУЩЕН
     Порт: ${PORT}
     Группы: включены ✓
     Онлайн-статус: включён ✓
     Счётчик непрочитанных: включён ✓
+    Каналы: включены ✓
     ======================================
     `);
 });

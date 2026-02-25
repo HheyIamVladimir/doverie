@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.4.0</title>
+    <title>Доверие v1.5.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -539,6 +539,88 @@
         }
         .chat-status.online { color: #2ecc71; }
 
+        /* ===== КАНАЛЫ ===== */
+        .channel-post {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 10px 12px;
+            background: var(--surface2);
+            overflow: hidden;
+            animation: fadeIn 0.2s ease both;
+        }
+        .channel-post-header {
+            padding: 12px 14px 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .channel-post-body {
+            padding: 0 14px 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .channel-post-footer {
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .comment-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 4px 0;
+            cursor: pointer;
+            font-family: inherit;
+            letter-spacing: 0.04em;
+        }
+        .comment-btn:active { transform: none; }
+        .comments-section {
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+        }
+        .comment-item {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            animation: fadeIn 0.15s ease;
+        }
+        .comment-author {
+            font-size: 0.72rem;
+            color: var(--accent2);
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .comment-input-row {
+            display: flex;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--surface2);
+        }
+        .comment-input-row input {
+            margin: 0; flex: 1; padding: 8px 12px; font-size: 0.85rem;
+        }
+        .comment-input-row button {
+            padding: 8px 12px; font-size: 0.8rem; flex-shrink: 0;
+        }
+        .post-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        .channel-owner-badge {
+            font-size: 0.62rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--accent);
+            color: var(--msg-own-color);
+            font-weight: bold;
+        }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -571,7 +653,7 @@
         <!-- AUTH -->
         <div id="auth-screen" class="screen active-screen">
             <h2 class="auth-title">ДОВЕРИЕ</h2>
-            <p class="auth-subtitle">v1.4.0 · защищённый мессенджер</p>
+            <p class="auth-subtitle">v1.5.0 · защищённый мессенджер</p>
 
             <div class="auth-block">
                 <h4>◆ РЕГИСТРАЦИЯ</h4>
@@ -605,6 +687,7 @@
             <div class="tabs">
                 <button class="tab active" id="tab-chats" onclick="switchTab('chats')">ЧАТЫ</button>
                 <button class="tab" id="tab-groups" onclick="switchTab('groups')">ГРУППЫ</button>
+                <button class="tab" id="tab-channels" onclick="switchTab('channels')">КАНАЛЫ</button>
             </div>
 
             <!-- Поиск -->
@@ -619,10 +702,18 @@
                 </div>
                 <button onclick="showCreateGroupModal()" style="width:100%; margin:0;">+ СОЗДАТЬ ГРУППУ</button>
             </div>
+            <div class="search-bar" id="search-bar-channels" style="display:none; flex-direction: column; gap: 8px;">
+                <div style="display:flex; gap:6px; width:100%;">
+                    <input type="text" id="searchChannelId" placeholder="ID КАНАЛА (D-XXXX)..." style="margin:0; flex:1;">
+                    <button onclick="subscribeChannel(document.getElementById('searchChannelId').value)" style="width:auto; padding:10px 14px;">➕</button>
+                </div>
+                <button onclick="showCreateChannelModal()" style="width:100%; margin:0;">📢 СОЗДАТЬ КАНАЛ</button>
+            </div>
 
             <!-- Списки -->
             <div id="chat-list" style="flex: 1; overflow-y: auto;"></div>
             <div id="group-list" style="flex: 1; overflow-y: auto; display: none;"></div>
+            <div id="channel-list" style="flex: 1; overflow-y: auto; display: none;"></div>
         </div>
 
         <!-- CHAT WINDOW -->
@@ -675,6 +766,19 @@
             </div>
         </div>
 
+        <!-- CHANNEL VIEW -->
+        <div id="channel-screen" class="screen">
+            <div class="header">
+                <button class="secondary" onclick="showList()" style="padding: 8px 12px;">←</button>
+                <div class="chat-header-info">
+                    <span id="channel-name" class="header-title">КАНАЛ</span>
+                    <span id="channel-id-display" class="chat-status"></span>
+                </div>
+                <button class="secondary" id="channel-post-btn" onclick="showPostModal()" style="padding: 8px 12px; display:none;">✏</button>
+            </div>
+            <div id="channel-posts" style="flex:1; overflow-y:auto; background: var(--bg);"></div>
+        </div>
+
     </div>
 
     <!-- MODAL: создать группу -->
@@ -703,11 +807,51 @@
         </div>
     </div>
 
+    <!-- MODAL: создать канал -->
+    <div id="modal-create-channel" style="display:none;" class="modal-overlay">
+        <div class="modal">
+            <h4>📢 СОЗДАТЬ КАНАЛ</h4>
+            <input type="text" id="newChannelName" placeholder="НАЗВАНИЕ КАНАЛА">
+            <input type="text" id="newChannelDesc" placeholder="ОПИСАНИЕ (необязательно)">
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('modal-create-channel')">ОТМЕНА</button>
+                <button onclick="createChannel()">СОЗДАТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: инфо о канале -->
+    <div id="modal-channel-info" style="display:none;" class="modal-overlay">
+        <div class="modal">
+            <h4 id="modal-channel-info-title">КАНАЛ</h4>
+            <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0 0 6px 0;">ID КАНАЛА:</p>
+            <div class="id-display" id="modal-channel-info-id" style="font-size: 1.2rem;"></div>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 10px;">Поделись ID, чтобы другие могли подписаться</p>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('modal-channel-info')">ЗАКРЫТЬ</button>
+                <button onclick="copyChannelId()">КОПИРОВАТЬ ID</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: новый пост -->
+    <div id="modal-new-post" style="display:none;" class="modal-overlay">
+        <div class="modal">
+            <h4>✏ НОВЫЙ ПОСТ</h4>
+            <textarea id="newPostText" placeholder="Текст поста..." style="width:100%; min-height:120px; padding:12px; border:1px solid var(--border-strong); background:var(--surface2); color:var(--text); font-family:inherit; font-size:0.95rem; border-radius:8px; resize:vertical; margin-top:8px; outline:none;"></textarea>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('modal-new-post')">ОТМЕНА</button>
+                <button onclick="publishPost()">ОПУБЛИКОВАТЬ</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let myId = null, currentTargetId = null, currentChatType = 'direct'; // 'direct' | 'group'
+        let myId = null, currentTargetId = null, currentChatType = 'direct'; // 'direct' | 'group' | 'channel'
         let tempUsername = "";
         let activeTab = 'chats';
         let currentGroupId = null;
+        let currentChannelId = null;
 
         // ===== ТЕМА =====
         function setTheme(theme) {
@@ -741,13 +885,15 @@
         // ===== TABS =====
         function switchTab(tab) {
             activeTab = tab;
-            document.getElementById('tab-chats').classList.toggle('active', tab === 'chats');
-            document.getElementById('tab-groups').classList.toggle('active', tab === 'groups');
-            document.getElementById('chat-list').style.display = tab === 'chats' ? 'block' : 'none';
-            document.getElementById('group-list').style.display = tab === 'groups' ? 'block' : 'none';
-            document.getElementById('search-bar-chats').style.display = tab === 'chats' ? 'flex' : 'none';
-            document.getElementById('search-bar-groups').style.display = tab === 'groups' ? 'flex' : 'none';
+            ['chats','groups','channels'].forEach(t => {
+                document.getElementById('tab-' + t).classList.toggle('active', tab === t);
+                const list = document.getElementById(t === 'chats' ? 'chat-list' : t + '-list');
+                if(list) list.style.display = tab === t ? 'block' : 'none';
+                const bar = document.getElementById('search-bar-' + t);
+                if(bar) bar.style.display = tab === t ? 'flex' : 'none';
+            });
             if(tab === 'groups') loadGroupList();
+            if(tab === 'channels') loadChannelList();
         }
 
         // ===== AUTH =====
@@ -910,12 +1056,15 @@
         function showList() {
             currentTargetId = null;
             currentGroupId = null;
+            currentChannelId = null;
             clearInterval(window.msgInterval);
             clearInterval(window.statusInt);
+            clearInterval(window.chanInt);
             document.getElementById('chat-target-status').textContent = '';
             showScreen('list-screen');
             if(activeTab === 'chats') loadChatList();
-            else loadGroupList();
+            else if(activeTab === 'groups') loadGroupList();
+            else if(activeTab === 'channels') loadChannelList();
         }
 
         function showSettings() {
@@ -1077,6 +1226,182 @@
                 if(e.target === this) this.style.display = 'none';
             });
         });
+
+        // ===== КАНАЛЫ =====
+        async function loadChannelList() {
+            if(!myId) return;
+            const res = await fetch(`/api/channels/${myId}`);
+            const channels = await res.json();
+            document.getElementById('channel-list').innerHTML = channels.length
+                ? channels.map((c, i) => `
+                    <div class="chat-item" style="animation-delay:${i*0.04}s" onclick="openChannel('${c.id}','${c.name}')">
+                        <div class="avatar" style="background:var(--accent);color:var(--msg-own-color);font-size:1.2rem;">📢</div>
+                        <div class="info">
+                            <b>${c.name} ${c.ownerId === myId ? '<span class="badge">МОЙ</span>' : ''}</b>
+                            <small>ID: ${c.id} · ${c.subCount || 0} подп.</small>
+                        </div>
+                        <button class="secondary" onclick="event.stopPropagation(); showChannelInfo('${c.id}','${c.name}')" style="padding:6px 10px;font-size:0.75rem;">ℹ</button>
+                    </div>`).join('')
+                : `<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:0.85rem;">Нет каналов.<br>Создай или подпишись по ID ↑</div>`;
+        }
+
+        async function openChannel(id, name) {
+            currentChannelId = id;
+            document.getElementById('channel-name').innerText = '📢 ' + name;
+            document.getElementById('channel-id-display').innerText = id;
+            // Кнопка "написать пост" только для владельца
+            const res = await fetch(`/api/channels/info/${id}`);
+            const data = await res.json();
+            const postBtn = document.getElementById('channel-post-btn');
+            postBtn.style.display = data.ownerId === myId ? 'block' : 'none';
+            showScreen('channel-screen');
+            loadChannelPosts();
+            if(window.chanInt) clearInterval(window.chanInt);
+            window.chanInt = setInterval(loadChannelPosts, 5000);
+        }
+
+        async function loadChannelPosts() {
+            if(!currentChannelId) return;
+            const res = await fetch(`/api/channels/${currentChannelId}/posts`);
+            const posts = await res.json();
+            const container = document.getElementById('channel-posts');
+            if(!posts.length) {
+                container.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:0.85rem;">Постов пока нет</div>`;
+                return;
+            }
+            container.innerHTML = posts.map(p => `
+                <div class="channel-post">
+                    <div class="channel-post-header">
+                        <div class="avatar" style="background:var(--accent);color:var(--msg-own-color);width:32px;height:32px;font-size:0.9rem;">📢</div>
+                        <span style="font-size:0.82rem;font-weight:bold;">${p.authorName}</span>
+                        <span class="channel-owner-badge">АВТОР</span>
+                        <span class="post-time">${timeAgo(p.time)}</span>
+                    </div>
+                    <div class="channel-post-body">${escHtml(p.text)}</div>
+                    <div class="channel-post-footer">
+                        <button class="comment-btn" onclick="toggleComments('${p.id}')">💬 ${p.commentCount || 0} комментариев</button>
+                    </div>
+                    <div class="comments-section" id="comments-${p.id}" style="display:none;">
+                        <div id="comments-list-${p.id}"></div>
+                        <div class="comment-input-row">
+                            <input type="text" id="comment-input-${p.id}" placeholder="Комментарий..." onkeydown="if(event.key==='Enter')sendComment('${p.id}')">
+                            <button onclick="sendComment('${p.id}')">➤</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function toggleComments(postId) {
+            const section = document.getElementById('comments-' + postId);
+            if(section.style.display === 'none') {
+                section.style.display = 'block';
+                await loadComments(postId);
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        async function loadComments(postId) {
+            const res = await fetch(`/api/channels/posts/${postId}/comments`);
+            const comments = await res.json();
+            const container = document.getElementById('comments-list-' + postId);
+            if(!container) return;
+            container.innerHTML = comments.length
+                ? comments.map(c => `
+                    <div class="comment-item">
+                        <div class="comment-author">${c.authorName}</div>
+                        <div>${escHtml(c.text)}</div>
+                    </div>`).join('')
+                : `<div style="padding:10px 14px;color:var(--text-muted);font-size:0.82rem;">Нет комментариев</div>`;
+        }
+
+        async function sendComment(postId) {
+            const input = document.getElementById('comment-input-' + postId);
+            const text = input.value.trim();
+            if(!text) return;
+            input.value = '';
+            await fetch(`/api/channels/posts/${postId}/comments`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({authorId: myId, text})
+            });
+            loadComments(postId);
+            // Обновить счётчик
+            loadChannelPosts();
+        }
+
+        function showCreateChannelModal() {
+            document.getElementById('newChannelName').value = '';
+            document.getElementById('newChannelDesc').value = '';
+            document.getElementById('modal-create-channel').style.display = 'flex';
+        }
+
+        async function createChannel() {
+            const name = document.getElementById('newChannelName').value.trim();
+            const desc = document.getElementById('newChannelDesc').value.trim();
+            if(!name) return alert('Введи название канала');
+            const res = await fetch('/api/channels', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, desc, ownerId: myId})
+            });
+            const data = await res.json();
+            if(data.success) {
+                closeModal('modal-create-channel');
+                showChannelInfo(data.channelId, name);
+                loadChannelList();
+            } else {
+                alert('Ошибка создания канала');
+            }
+        }
+
+        async function subscribeChannel(id) {
+            if(!id) return alert('Введи ID канала');
+            const res = await fetch('/api/channels/subscribe', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({channelId: id.trim().toUpperCase(), userId: myId})
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('searchChannelId').value = '';
+                loadChannelList();
+                alert('✓ Подписка оформлена!');
+            } else {
+                alert(data.error || 'Канал не найден');
+            }
+        }
+
+        function showPostModal() {
+            document.getElementById('newPostText').value = '';
+            document.getElementById('modal-new-post').style.display = 'flex';
+        }
+
+        async function publishPost() {
+            const text = document.getElementById('newPostText').value.trim();
+            if(!text) return alert('Напиши текст поста');
+            const res = await fetch(`/api/channels/${currentChannelId}/posts`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({authorId: myId, text})
+            });
+            const data = await res.json();
+            if(data.success) {
+                closeModal('modal-new-post');
+                loadChannelPosts();
+            }
+        }
+
+        function showChannelInfo(id, name) {
+            document.getElementById('modal-channel-info-title').innerText = '📢 ' + name;
+            document.getElementById('modal-channel-info-id').innerText = id;
+            document.getElementById('modal-channel-info').style.display = 'flex';
+        }
+
+        function copyChannelId() {
+            const id = document.getElementById('modal-channel-info-id').innerText;
+            navigator.clipboard.writeText(id).then(() => alert('✓ ID скопирован')).catch(() => alert(id));
+        }
+
+        function escHtml(text) {
+            return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
 
         // ===== LAMBDA =====
         async function applyLambda() {
