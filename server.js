@@ -395,6 +395,72 @@ app.get('/api/channels/posts/:postId/comments', (req, res) => {
     res.json(comments);
 });
 
+// ==================== СТРИМ ====================
+// Хранится в памяти (не сохраняется в БД)
+let activeStream = null; // { hostId, hostName, startTime, messages: [] }
+
+// Проверить статус стрима
+app.get('/api/stream', (req, res) => {
+    if(activeStream) {
+        res.json({ active: true, hostId: activeStream.hostId, hostName: activeStream.hostName, startTime: activeStream.startTime });
+    } else {
+        res.json({ active: false });
+    }
+});
+
+app.get('/api/stream/check', (req, res) => {
+    if(activeStream) {
+        res.json({ active: true, hostId: activeStream.hostId, startTime: activeStream.startTime });
+    } else {
+        res.json({ active: false });
+    }
+});
+
+// Запустить стрим
+app.post('/api/stream/start', (req, res) => {
+    const { hostId } = req.body;
+    if(activeStream) return res.json({ success: false, error: 'Уже идёт трансляция' });
+    const host = db.users.find(u => u.id === hostId);
+    if(!host) return res.status(404).json({ success: false });
+    activeStream = { hostId, hostName: host.username, startTime: Date.now(), messages: [] };
+    console.log(`[STREAM] Трансляция запущена пользователем ${host.username}`);
+    res.json({ success: true, startTime: activeStream.startTime });
+});
+
+// Завершить стрим
+app.post('/api/stream/end', (req, res) => {
+    const { hostId } = req.body;
+    if(!activeStream) return res.json({ success: false, error: 'Нет активной трансляции' });
+    if(activeStream.hostId !== hostId) return res.status(403).json({ success: false, error: 'Только хост может завершить' });
+    console.log(`[STREAM] Трансляция завершена. Длилась ${Math.floor((Date.now() - activeStream.startTime)/1000)} сек`);
+    activeStream = null;
+    res.json({ success: true });
+});
+
+// Отправить сообщение в стрим
+app.post('/api/stream/messages', (req, res) => {
+    const { fromId, text } = req.body;
+    if(!activeStream) return res.status(400).json({ success: false, error: 'Нет трансляции' });
+    if(!text || !fromId) return res.status(400).json({ success: false });
+    const user = db.users.find(u => u.id === fromId);
+    activeStream.messages.push({
+        fromId,
+        fromName: user ? user.username : fromId,
+        hostId: activeStream.hostId,
+        text,
+        time: Date.now()
+    });
+    // Хранить только последние 200 сообщений
+    if(activeStream.messages.length > 200) activeStream.messages.shift();
+    res.json({ success: true });
+});
+
+// Получить сообщения стрима
+app.get('/api/stream/messages', (req, res) => {
+    if(!activeStream) return res.json([]);
+    res.json(activeStream.messages.slice(-100));
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -412,12 +478,12 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.5.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v1.6.0 ЗАПУЩЕН
     Порт: ${PORT}
     Группы: включены ✓
-    Онлайн-статус: включён ✓
-    Счётчик непрочитанных: включён ✓
     Каналы: включены ✓
+    Онлайн-статус: включён ✓
+    Стрим (Эфир): включён ✓
     ======================================
     `);
 });
