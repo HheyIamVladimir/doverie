@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.6.0</title>
+    <title>Доверие v1.7.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -820,6 +820,173 @@
             color: #f0f0f0; font-size: 1rem; margin: 0;
         }
 
+        /* ===== РЕАКЦИИ ===== */
+        .message-wrap {
+            display: flex;
+            flex-direction: column;
+            max-width: 82%;
+        }
+        .message-wrap.my { align-self: flex-end; align-items: flex-end; }
+        .message-wrap.their { align-self: flex-start; align-items: flex-start; }
+        .reaction-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 3px;
+            flex-wrap: wrap;
+        }
+        .reaction-chip {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            display: flex; align-items: center; gap: 3px;
+        }
+        .reaction-chip:active { transform: scale(0.9); }
+        .reaction-chip.mine { border-color: var(--accent); background: rgba(255,102,0,0.1); }
+        .add-reaction-btn {
+            background: none;
+            border: 1px dashed var(--border);
+            border-radius: 50%;
+            width: 22px; height: 22px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            padding: 0;
+            transition: border-color 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+        .add-reaction-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .add-reaction-btn:active { transform: scale(0.9); }
+        .reaction-picker {
+            position: absolute;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 8px;
+            display: flex; gap: 6px;
+            z-index: 300;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            animation: popIn 0.15s ease;
+        }
+        .reaction-picker button {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 8px;
+            transition: background 0.1s, transform 0.1s;
+        }
+        .reaction-picker button:hover { background: var(--surface2); }
+        .reaction-picker button:active { transform: scale(0.85); }
+
+        /* ===== FAQ SCREEN ===== */
+        #faq-screen {
+            background: var(--surface);
+        }
+        .faq-fab {
+            position: absolute;
+            bottom: 84px;
+            left: 20px;
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 2px solid var(--border-strong);
+            color: var(--accent);
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            z-index: 50;
+            transition: transform 0.15s, box-shadow 0.15s;
+            padding: 0;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }
+        .faq-fab:hover { transform: scale(1.08); }
+        .faq-fab:active { transform: scale(0.94); }
+        .faq-item {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 10px 14px;
+            overflow: hidden;
+            background: var(--surface2);
+            animation: fadeIn 0.3s ease both;
+        }
+        .faq-question {
+            padding: 14px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 0.03em;
+            transition: background 0.15s;
+            user-select: none;
+        }
+        .faq-question:hover { background: var(--bg); }
+        .faq-num {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--msg-own-color);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .faq-arrow {
+            margin-left: auto;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+            font-size: 0.8rem;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.2s;
+            padding: 0 16px;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+        .faq-answer.open {
+            max-height: 600px;
+            padding: 0 16px 14px;
+        }
+        .faq-question.open .faq-arrow { transform: rotate(90deg); }
+
+        /* ===== УЛУЧШЕННЫЙ AUTH ===== */
+        .auth-logo-wrap {
+            text-align: center;
+            padding: 30px 0 10px;
+            animation: fadeIn 0.5s ease both;
+        }
+        .auth-logo-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 8px;
+            animation: popIn 0.5s ease both;
+        }
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0 12px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-strong);
+        }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -851,28 +1018,35 @@
 
         <!-- AUTH -->
         <div id="auth-screen" class="screen active-screen">
-            <h2 class="auth-title">ДОВЕРИЕ</h2>
-            <p class="auth-subtitle">v1.6.0 · защищённый мессенджер</p>
-
-            <div class="auth-block">
-                <h4>◆ РЕГИСТРАЦИЯ</h4>
-                <input type="text" id="regName" placeholder="ИМЯ ПОЛЬЗОВАТЕЛЯ">
-                <input type="password" id="regPass" placeholder="ПАРОЛЬ">
-                <select id="platform">
-                    <option value="app">📱 МОБ. ПРИЛОЖЕНИЕ</option>
-                    <option value="site">🌐 ВЕБ-САЙТ</option>
-                </select>
-                <button class="big-btn" onclick="register()">СОЗДАТЬ АККАУНТ</button>
+            <div class="auth-logo-wrap">
+                <span class="auth-logo-icon">🔐</span>
+                <h2 class="auth-title">ДОВЕРИЕ</h2>
+                <p class="auth-subtitle">v1.7.0 · защищённый мессенджер</p>
             </div>
 
-            <div class="auth-block">
-                <h4>◆ ВХОД</h4>
-                <input type="text" id="loginId" placeholder="ВАШ ID">
-                <input type="password" id="loginPass" placeholder="ВАШ ПАРОЛЬ">
-                <button class="big-btn" onclick="login()">ВОЙТИ В СИСТЕМУ</button>
-            </div>
+            <div style="padding: 0 20px 20px; overflow-y: auto; flex: 1;">
+                <div class="auth-block">
+                    <h4>◆ РЕГИСТРАЦИЯ</h4>
+                    <input type="text" id="regName" placeholder="ИМЯ ПОЛЬЗОВАТЕЛЯ">
+                    <input type="password" id="regPass" placeholder="ПАРОЛЬ">
+                    <select id="platform">
+                        <option value="app">📱 МОБ. ПРИЛОЖЕНИЕ</option>
+                        <option value="site">🌐 ВЕБ-САЙТ</option>
+                    </select>
+                    <button class="big-btn" onclick="register()">СОЗДАТЬ АККАУНТ</button>
+                </div>
 
-            <p id="auth-msg"></p>
+                <div class="auth-divider">или войти</div>
+
+                <div class="auth-block">
+                    <h4>◆ ВХОД</h4>
+                    <input type="text" id="loginId" placeholder="ВАШ ID">
+                    <input type="password" id="loginPass" placeholder="ВАШ ПАРОЛЬ">
+                    <button class="big-btn" onclick="login()">ВОЙТИ В СИСТЕМУ</button>
+                </div>
+
+                <p id="auth-msg"></p>
+            </div>
         </div>
 
         <!-- LIST + GROUPS -->
@@ -917,8 +1091,25 @@
             <div id="group-list" style="flex: 1; overflow-y: auto; display: none;"></div>
             <div id="channel-list" style="flex: 1; overflow-y: auto; display: none;"></div>
 
-            <!-- FAB кнопка стрима -->
+            <!-- FAB кнопки -->
+            <button class="faq-fab" onclick="showFaq()" title="FAQ">?</button>
             <button class="stream-fab" onclick="startStream()" title="Запустить эфир">📡</button>
+        </div>
+
+        <!-- FAQ SCREEN -->
+        <div id="faq-screen" class="screen">
+            <div class="header">
+                <button class="secondary" onclick="showList()" style="padding: 8px 12px;">←</button>
+                <div class="header-title">ВОПРОСЫ И ОТВЕТЫ</div>
+                <div style="width: 44px;"></div>
+            </div>
+            <div style="flex:1; overflow-y: auto; padding-bottom: 20px;">
+                <!-- ======================================= -->
+                <!-- ШАБЛОН FAQ — РЕДАКТИРУЙ ТЕКСТ ЗДЕСЬ!   -->
+                <!-- Добавляй новые вопросы копируя блок    -->
+                <!-- ======================================= -->
+                <div id="faq-list"></div>
+            </div>
         </div>
 
         <!-- STREAM SCREEN -->
@@ -1337,6 +1528,8 @@
             loadMessages();
         }
 
+        let lastMsgHash = '';
+
         async function loadMessages() {
             if(!myId) return;
             let messages = [];
@@ -1349,24 +1542,72 @@
                 messages = await res.json();
             } else return;
 
+            // Фикс мигания: не перерисовываем если данные не изменились
+            const hash = JSON.stringify(messages.map(m => m.id || m.time + m.text + (m.reactions ? JSON.stringify(m.reactions) : '')));
+            if(hash === lastMsgHash) return;
+            lastMsgHash = hash;
+
             const history = document.getElementById('chat-history');
             const wasBottom = history.scrollHeight - history.scrollTop <= history.clientHeight + 60;
 
             if(currentChatType === 'group') {
                 history.innerHTML = messages.map(m => {
                     const isMy = m.fromId === myId;
-                    return `<div class="message ${isMy ? 'msg-my' : 'msg-their'}">
-                        ${!isMy ? `<div class="msg-sender">${m.fromName || m.fromId}</div>` : ''}
-                        ${m.text}
-                    </div>`;
+                    return renderMessageWrap(m, isMy, true);
                 }).join('');
             } else {
-                history.innerHTML = messages.map(m => `
-                    <div class="message ${m.fromId === myId ? 'msg-my' : 'msg-their'}">${m.text}</div>
-                `).join('');
+                history.innerHTML = messages.map(m => {
+                    const isMy = m.fromId === myId;
+                    return renderMessageWrap(m, isMy, false);
+                }).join('');
             }
 
             if(wasBottom) history.scrollTop = history.scrollHeight;
+        }
+
+        function renderMessageWrap(m, isMy, isGroup) {
+            const msgId = m.id || (m.fromId + '_' + m.time);
+            const reactions = m.reactions || {};
+            const reactionHtml = Object.entries(reactions).map(([emoji, users]) =>
+                `<span class="reaction-chip ${users.includes(myId) ? 'mine' : ''}" onclick="toggleReaction('${msgId}','${emoji}')">${emoji} ${users.length}</span>`
+            ).join('');
+
+            return `<div class="message-wrap ${isMy ? 'my' : 'their'}">
+                ${isGroup && !isMy ? `<div class="msg-sender">${m.fromName || m.fromId}</div>` : ''}
+                <div style="display:flex; align-items:flex-end; gap:5px; ${isMy ? 'flex-direction:row-reverse;' : ''}">
+                    <div class="message ${isMy ? 'msg-my' : 'msg-their'}">${escHtml(m.text)}</div>
+                    <button class="add-reaction-btn" onclick="showReactionPicker(event,'${msgId}')">+</button>
+                </div>
+                ${reactionHtml ? `<div class="reaction-row">${reactionHtml}</div>` : ''}
+            </div>`;
+        }
+
+        function showReactionPicker(e, msgId) {
+            e.stopPropagation();
+            document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+            const picker = document.createElement('div');
+            picker.className = 'reaction-picker';
+            picker.innerHTML = ['❤️','😂','👍'].map(emoji =>
+                `<button onclick="toggleReaction('${msgId}','${emoji}'); this.closest('.reaction-picker').remove();">${emoji}</button>`
+            ).join('');
+            // Позиционируем рядом с кнопкой
+            const rect = e.target.getBoundingClientRect();
+            const container = document.querySelector('.app-container');
+            const containerRect = container.getBoundingClientRect();
+            picker.style.position = 'fixed';
+            picker.style.top = (rect.top - 60) + 'px';
+            picker.style.left = Math.min(rect.left, containerRect.right - 150) + 'px';
+            document.body.appendChild(picker);
+            setTimeout(() => document.addEventListener('click', () => picker.remove(), {once: true}), 0);
+        }
+
+        async function toggleReaction(msgId, emoji) {
+            await fetch('/api/reactions', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({msgId, userId: myId, emoji, chatType: currentChatType, chatId: currentChatType === 'group' ? currentGroupId : currentTargetId})
+            });
+            lastMsgHash = ''; // сбрасываем хэш чтобы обновилось
+            loadMessages();
         }
 
         // ===== ГРУППЫ =====
@@ -1764,6 +2005,59 @@
             clearInterval(streamPollInt);
             clearInterval(streamTimerInt);
             showList();
+        }
+
+        // ===== FAQ =====
+        // ↓↓↓ РЕДАКТИРУЙ ВОПРОСЫ И ОТВЕТЫ ЗДЕСЬ ↓↓↓
+        const FAQ_ITEMS = [
+            {
+                q: "Что такое мессенеджер Доверие? ",
+                a: "Это текстовой Месенеджер сделанный Владимиром Игнатенко. Я не имею доступа к вашим акаунтам и перепискам, у всех равные права."
+            },
+            {
+                q: "Зачем Мессенеджер Доверие, если есть Telega?",
+                a: "1. Мессенеджер Доверие работает в России без всяких прокси. 2. Telega ((не путать с Telegram) это скам проект, который ворует ваши персональные данные и используют ваши акаунты для накрутки негативных реакций в сторору: РКН/СКАМ ПРОЕКТА TELEGA/ЛЮБОЕ УПОМИНАНИЕ ПРОКСИ И ОБХОДОВ."
+            },
+            {
+                q: "Как создать группу или канал?",
+                a: "Перейди на вкладку ГРУППЫ или КАНАЛЫ и нажми кнопку «+ СОЗДАТЬ». Тебе выдадут уникальный ID — поделись им с друзьями чтобы они могли вступить."
+            },
+            {
+                q: "Что такое Эфир?",
+                a: "Эфир — это публичная трансляция в реальном времени. Нажми кнопку 📡 внизу слева чтобы запустить. Все онлайн-пользователи увидят уведомление и смогут присоединиться."
+            },
+            {
+                q: "Как я могу предложить свою идею для развития мессенеджера?",
+                a: "Напишите мне в Telegram @to_hnw. Да без шуток, скоро я сделаю иначе."
+            },
+        ];
+        // ↑↑↑ КОНЕЦ РЕДАКТИРУЕМОЙ ЗОНЫ ↑↑↑
+
+        function showFaq() {
+            // Генерируем список
+            const list = document.getElementById('faq-list');
+            list.innerHTML = FAQ_ITEMS.map((item, i) => `
+                <div class="faq-item" style="animation-delay:${i * 0.07}s">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <div class="faq-num">${i + 1}</div>
+                        <span>${item.q}</span>
+                        <span class="faq-arrow">▶</span>
+                    </div>
+                    <div class="faq-answer">${item.a}</div>
+                </div>`).join('');
+            showScreen('faq-screen');
+        }
+
+        function toggleFaq(el) {
+            const answer = el.nextElementSibling;
+            const isOpen = answer.classList.contains('open');
+            // Закрываем все
+            document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('open'));
+            document.querySelectorAll('.faq-question').forEach(q => q.classList.remove('open'));
+            if(!isOpen) {
+                answer.classList.add('open');
+                el.classList.add('open');
+            }
         }
 
         // ===== LAMBDA =====

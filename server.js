@@ -461,6 +461,44 @@ app.get('/api/stream/messages', (req, res) => {
     res.json(activeStream.messages.slice(-100));
 });
 
+// ==================== РЕАКЦИИ ====================
+
+app.post('/api/reactions', (req, res) => {
+    const { msgId, userId, emoji, chatType, chatId } = req.body;
+    if(!msgId || !userId || !emoji) return res.status(400).json({ success: false });
+
+    let msg = null;
+    if(chatType === 'group') {
+        msg = db.groupMessages.find(m => (m.id || (m.fromId + '_' + m.time)) === msgId);
+    } else {
+        msg = db.messages.find(m => (m.id || (m.fromId + '_' + m.time)) === msgId);
+    }
+
+    // Если нашли по составному ключу — присваиваем id
+    if(!msg) {
+        // Попробуем найти по time (последние 500)
+        const pool = chatType === 'group' ? db.groupMessages : db.messages;
+        msg = pool.find(m => String(m.fromId + '_' + m.time) === msgId || String(m.time) === msgId.split('_')[1]);
+    }
+
+    if(!msg) return res.status(404).json({ success: false, error: 'Сообщение не найдено' });
+
+    if(!msg.id) msg.id = msg.fromId + '_' + msg.time;
+    if(!msg.reactions) msg.reactions = {};
+    if(!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+    const idx = msg.reactions[emoji].indexOf(userId);
+    if(idx === -1) {
+        msg.reactions[emoji].push(userId);
+    } else {
+        msg.reactions[emoji].splice(idx, 1);
+        if(msg.reactions[emoji].length === 0) delete msg.reactions[emoji];
+    }
+
+    saveDB();
+    res.json({ success: true });
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -478,12 +516,12 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.6.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v1.7.0 ЗАПУЩЕН
     Порт: ${PORT}
     Группы: включены ✓
     Каналы: включены ✓
-    Онлайн-статус: включён ✓
-    Стрим (Эфир): включён ✓
+    Стрим: включён ✓
+    Реакции: включены ✓
     ======================================
     `);
 });
