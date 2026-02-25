@@ -887,7 +887,9 @@
             activeTab = tab;
             ['chats','groups','channels'].forEach(t => {
                 document.getElementById('tab-' + t).classList.toggle('active', tab === t);
-                const list = document.getElementById(t === 'chats' ? 'chat-list' : t + '-list');
+                // Правильные ID: chat-list, group-list, channel-list (без s)
+                const listId = t === 'chats' ? 'chat-list' : t.replace(/s$/, '') + '-list';
+                const list = document.getElementById(listId);
                 if(list) list.style.display = tab === t ? 'block' : 'none';
                 const bar = document.getElementById('search-bar-' + t);
                 if(bar) bar.style.display = tab === t ? 'flex' : 'none';
