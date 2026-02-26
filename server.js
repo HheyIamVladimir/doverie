@@ -116,6 +116,7 @@ app.post('/api/login', (req, res) => {
         (u.username.replace(/^\[.*?\]\s*/, '').toLowerCase() === username.toLowerCase() && u.password === password)
     );
     if (user) {
+        if(user.banned) return res.status(403).json({success:false, error:'banned'});
         pingOnline(user.id);
         res.json({ success: true, id: user.id, username: user.username });
     } else {
@@ -575,6 +576,57 @@ app.post('/api/admin/reports/reviewed', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== ПЕЧАТАЕТ ====================
+const typingUsers = new Map(); // "fromId_toId" -> timestamp
+
+app.post('/api/typing', (req, res) => {
+    const { fromId, toId } = req.body;
+    if(!fromId || !toId) return res.status(400).json({success:false});
+    typingUsers.set(`${fromId}_${toId}`, Date.now());
+    res.json({success:true});
+});
+
+app.get('/api/typing/:fromId/:toId', (req, res) => {
+    const key = `${req.params.fromId}_${req.params.toId}`;
+    const last = typingUsers.get(key);
+    const typing = last && (Date.now() - last) < 4000;
+    res.json({typing: !!typing});
+});
+
+// ==================== ЭМОДЗИ СТАТУС ====================
+app.post('/api/mood', (req, res) => {
+    const { userId, mood } = req.body;
+    const user = db.users.find(u => u.id === userId);
+    if(!user) return res.status(404).json({success:false});
+    user.mood = mood || '';
+    saveDB();
+    res.json({success:true});
+});
+
+// ==================== БАН ====================
+app.post('/api/admin/ban', (req, res) => {
+    const { adminId, targetId } = req.body;
+    if(!isAdmin(adminId)) return res.status(403).json({success:false, error:'Нет доступа'});
+    const user = db.users.find(u => u.id === targetId);
+    if(!user) return res.status(404).json({success:false, error:'Пользователь не найден'});
+    if(isAdmin(targetId)) return res.json({success:false, error:'Нельзя забанить админа'});
+    user.banned = true;
+    saveDB();
+    console.log(`[BAN] Пользователь ${user.username} забанен`);
+    res.json({success:true});
+});
+
+// Разбан
+app.post('/api/admin/unban', (req, res) => {
+    const { adminId, targetId } = req.body;
+    if(!isAdmin(adminId)) return res.status(403).json({success:false});
+    const user = db.users.find(u => u.id === targetId);
+    if(!user) return res.status(404).json({success:false});
+    user.banned = false;
+    saveDB();
+    res.json({success:true});
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -592,7 +644,7 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.9.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v2.0.0 ЗАПУЩЕН
     Порт: ${PORT}
     Юзернеймы: включены ✓
     Группы: включены ✓

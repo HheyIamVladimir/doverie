@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v1.7.0</title>
+    <title>Доверие v2.0.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -1029,6 +1029,86 @@
         }
         .admin-stats b { color: var(--accent); font-size: 1rem; }
 
+        /* ===== ЭМОДЗИ СТАТУС ===== */
+        .emoji-status {
+            font-size: 1rem;
+            margin-left: 5px;
+            cursor: default;
+        }
+        .mood-picker-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .mood-picker {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 340px;
+            animation: popIn 0.25s ease;
+            text-align: center;
+        }
+        .mood-picker h4 {
+            margin: 0 0 16px;
+            color: var(--accent);
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+        }
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .mood-btn {
+            background: var(--surface2);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 1.6rem;
+            padding: 8px;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.1s;
+            width: 100%;
+        }
+        .mood-btn:hover { border-color: var(--accent); transform: scale(1.1); }
+        .mood-btn.selected { border-color: var(--accent); background: rgba(255,102,0,0.1); }
+        .mood-btn:active { transform: scale(0.9); }
+
+        /* ===== ВРЕМЯ СООБЩЕНИЯ ===== */
+        .msg-time {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 3px;
+            text-align: right;
+        }
+        .msg-their .msg-time { color: var(--text-muted); text-align: left; }
+
+        /* ===== ПЕЧАТАЕТ ===== */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        .typing-indicator.visible { display: flex; animation: fadeIn 0.2s ease; }
+        .typing-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: pulse 1s ease infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1183,9 +1263,15 @@
                 </div>
                 <button class="secondary" onclick="showReportModal()" style="padding: 8px 12px; font-size: 1rem; color: #e53935;" title="Пожаловаться">⚑</button>
             </div>
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <span id="typing-text"></span>
+            </div>
             <div class="chat-history" id="chat-history"></div>
             <div class="input-area">
-                <input type="text" id="msgText" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()">
+                <input type="text" id="msgText" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()" oninput="handleTyping()">
                 <button onclick="sendMessage()">➤</button>
             </div>
         </div>
@@ -1250,6 +1336,16 @@
             <div id="channel-posts" style="flex:1; overflow-y:auto; background: var(--bg);"></div>
         </div>
 
+    </div>
+
+    <!-- MOOD PICKER -->
+    <div id="mood-picker-overlay" class="mood-picker-overlay" style="display:none;">
+        <div class="mood-picker">
+            <h4>😊 ВЫБЕРИ НАСТРОЕНИЕ</h4>
+            <div class="mood-grid" id="mood-grid"></div>
+            <button onclick="saveMood()" style="width:100%;">СОХРАНИТЬ</button>
+            <button class="secondary" onclick="document.getElementById('mood-picker-overlay').style.display='none'" style="width:100%; margin-top:8px;">ПРОПУСТИТЬ</button>
+        </div>
     </div>
 
     <!-- MODAL: репорт -->
@@ -1434,6 +1530,8 @@
                 } else {
                     enterApp();
                 }
+            } else if(res.status === 403) {
+                showAuthMsg('🚫 Ваш аккаунт заблокирован');
             } else {
                 showAuthMsg('❌ Неверное имя или пароль');
             }
@@ -1461,14 +1559,13 @@
         const ADMIN_USERNAME = 'adminjs';
 
         function enterApp() {
-            document.getElementById('display-my-name').innerText = tempUsername;
             loadTheme();
             const sel = document.getElementById('themeSelect');
             if(sel) sel.value = localStorage.getItem('app_theme') || 'dark';
 
-            // Если это админ — показываем панель репортов
             const rawName = tempUsername.replace(/^\[.*?\]\s*/, '').toLowerCase();
             if(rawName === ADMIN_USERNAME) {
+                document.getElementById('display-my-name').innerText = '🛡 АДМИН';
                 showScreen('admin-screen');
                 loadAdminReports();
                 if(window.adminInt) clearInterval(window.adminInt);
@@ -1476,6 +1573,7 @@
                 return;
             }
 
+            updateDisplayName();
             showScreen('list-screen');
             loadChatList();
             if(window.listInt) clearInterval(window.listInt);
@@ -1486,6 +1584,8 @@
             checkStreamBanner();
             if(window.streamBannerInt) clearInterval(window.streamBannerInt);
             window.streamBannerInt = setInterval(checkStreamBanner, 5000);
+            // Показываем mood picker при каждом входе
+            showMoodPicker();
         }
 
         async function pingOnline() {
@@ -1532,6 +1632,7 @@
             currentChatType = 'direct';
             document.getElementById('chat-target-name').innerText = name || id;
             document.getElementById('chat-target-status').textContent = '';
+            document.getElementById('typing-indicator').classList.remove('visible');
             showScreen('chat-window');
             lastMsgHash = '';
             loadMessages();
@@ -1540,6 +1641,8 @@
             window.msgInterval = setInterval(loadMessages, 2000);
             if(window.statusInt) clearInterval(window.statusInt);
             window.statusInt = setInterval(updateChatStatus, 15000);
+            if(window.typingInt) clearInterval(window.typingInt);
+            window.typingInt = setInterval(checkTyping, 2000);
         }
 
         async function startChatByUsername(username) {
@@ -1583,7 +1686,9 @@
             clearInterval(window.msgInterval);
             clearInterval(window.statusInt);
             clearInterval(window.chanInt);
+            clearInterval(window.typingInt);
             document.getElementById('chat-target-status').textContent = '';
+            document.getElementById('typing-indicator').classList.remove('visible');
             showScreen('list-screen');
             if(activeTab === 'chats') loadChatList();
             else if(activeTab === 'groups') loadGroupList();
@@ -1671,15 +1776,29 @@
             const reactionHtml = Object.entries(reactions).map(([emoji, users]) =>
                 `<span class="reaction-chip ${users.includes(myId) ? 'mine' : ''}" onclick="toggleReaction('${msgId}','${emoji}')">${emoji} ${users.length}</span>`
             ).join('');
+            const timeStr = m.time ? formatMsgTime(m.time) : '';
 
             return `<div class="message-wrap ${isMy ? 'my' : 'their'}">
                 ${isGroup && !isMy ? `<div class="msg-sender">${m.fromName || m.fromId}</div>` : ''}
                 <div style="display:flex; align-items:flex-end; gap:5px; ${isMy ? 'flex-direction:row-reverse;' : ''}">
-                    <div class="message ${isMy ? 'msg-my' : 'msg-their'}">${escHtml(m.text)}</div>
+                    <div class="message ${isMy ? 'msg-my' : 'msg-their'}">
+                        ${escHtml(m.text)}
+                        <div class="msg-time">${timeStr}</div>
+                    </div>
                     <button class="add-reaction-btn" onclick="showReactionPicker(event,'${msgId}')">+</button>
                 </div>
                 ${reactionHtml ? `<div class="reaction-row">${reactionHtml}</div>` : ''}
             </div>`;
+        }
+
+        function formatMsgTime(ts) {
+            const d = new Date(ts);
+            const now = new Date();
+            const hh = String(d.getHours()).padStart(2,'0');
+            const mm = String(d.getMinutes()).padStart(2,'0');
+            // Если сегодня — только время, иначе дата
+            if(d.toDateString() === now.toDateString()) return `${hh}:${mm}`;
+            return `${d.getDate()}.${d.getMonth()+1} ${hh}:${mm}`;
         }
 
         function showReactionPicker(e, msgId) {
@@ -2107,6 +2226,73 @@
             showList();
         }
 
+        // ===== ЭМОДЗИ СТАТУС =====
+        const MOODS = ['😊','😎','😴','🤔','😤','🥳','😢','❤️','🔥','👻','🎮','📚','🎵','☕','🌙'];
+        let selectedMood = '';
+
+        function showMoodPicker() {
+            const grid = document.getElementById('mood-grid');
+            const saved = localStorage.getItem('mood_' + myId) || '';
+            selectedMood = saved;
+            grid.innerHTML = MOODS.map(e =>
+                `<button class="mood-btn ${e === saved ? 'selected' : ''}" onclick="selectMood('${e}',this)">${e}</button>`
+            ).join('');
+            document.getElementById('mood-picker-overlay').style.display = 'flex';
+        }
+
+        function selectMood(emoji, btn) {
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedMood = emoji;
+        }
+
+        async function saveMood() {
+            localStorage.setItem('mood_' + myId, selectedMood);
+            document.getElementById('mood-picker-overlay').style.display = 'none';
+            // Сохраняем на сервере
+            await fetch('/api/mood', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({userId: myId, mood: selectedMood})
+            }).catch(()=>{});
+            // Обновляем отображение имени
+            updateDisplayName();
+        }
+
+        function updateDisplayName() {
+            const mood = localStorage.getItem('mood_' + myId) || '';
+            const name = tempUsername.replace(/^\[.*?\]\s*/, '');
+            document.getElementById('display-my-name').innerHTML =
+                `${name} <span class="emoji-status">${mood}</span>`;
+        }
+
+        // ===== ПЕЧАТАЕТ =====
+        let typingTimeout = null;
+
+        async function handleTyping() {
+            if(!currentTargetId || currentChatType !== 'direct') return;
+            await fetch('/api/typing', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({fromId: myId, toId: currentTargetId})
+            }).catch(()=>{});
+        }
+
+        async function checkTyping() {
+            if(!currentTargetId || currentChatType !== 'direct') return;
+            try {
+                const res = await fetch(`/api/typing/${currentTargetId}/${myId}`);
+                const data = await res.json();
+                const indicator = document.getElementById('typing-indicator');
+                const text = document.getElementById('typing-text');
+                if(data.typing) {
+                    const name = document.getElementById('chat-target-name').innerText;
+                    text.textContent = `${name} печатает...`;
+                    indicator.classList.add('visible');
+                } else {
+                    indicator.classList.remove('visible');
+                }
+            } catch(e) {}
+        }
+
         // ===== РЕПОРТЫ =====
         function showReportModal() {
             if(!currentTargetId) return;
@@ -2121,33 +2307,19 @@
             const reason = document.getElementById('report-reason').value;
             const comment = document.getElementById('report-comment').value.trim();
             const targetName = document.getElementById('report-target-name').innerText;
-
             const res = await fetch('/api/reports', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    fromId: myId,
-                    targetId: currentTargetId,
-                    targetName,
-                    reason,
-                    comment
-                })
+                body: JSON.stringify({fromId: myId, targetId: currentTargetId, targetName, reason, comment})
             });
             const data = await res.json();
-            if(data.success) {
-                closeModal('modal-report');
-                alert('✓ Жалоба отправлена');
-            } else {
-                alert('Ошибка отправки');
-            }
+            if(data.success) { closeModal('modal-report'); alert('✓ Жалоба отправлена'); }
+            else alert('Ошибка отправки');
         }
 
         // ===== АДМИН ПАНЕЛЬ =====
         const REASON_LABELS = {
-            spam: '🚫 Спам',
-            insult: '😡 Оскорбления',
-            threat: '⚠️ Угрозы',
-            scam: '💸 Мошенничество',
-            other: '📝 Другое'
+            spam: '🚫 Спам', insult: '😡 Оскорбления',
+            threat: '⚠️ Угрозы', scam: '💸 Мошенничество', other: '📝 Другое'
         };
 
         async function loadAdminReports() {
@@ -2158,42 +2330,53 @@
             if(!res.ok) return;
             const data = await res.json();
             const container = document.getElementById('admin-reports-list');
-
             if(!data.reports || !data.reports.length) {
-                container.innerHTML = `
-                    <div class="admin-stats"><span>Всего жалоб: <b>0</b></span></div>
-                    <div style="text-align:center; color:var(--text-muted); padding:40px; font-size:0.85rem;">Жалоб нет 🎉</div>`;
+                container.innerHTML = `<div class="admin-stats"><span>Всего жалоб: <b>0</b></span></div>
+                    <div style="text-align:center;color:var(--text-muted);padding:40px;font-size:0.85rem;">Жалоб нет 🎉</div>`;
                 return;
             }
-
             const reports = [...data.reports].reverse();
             container.innerHTML = `
                 <div class="admin-stats">
-                    <span>Всего жалоб: <b>${data.reports.length}</b></span>
-                    <span>Новых: <b>${data.reports.filter(r => !r.reviewed).length}</b></span>
+                    <span>Всего: <b>${data.reports.length}</b></span>
+                    <span>Новых: <b>${data.reports.filter(r=>!r.reviewed).length}</b></span>
                 </div>
                 ${reports.map(r => `
                     <div class="report-card">
                         <div class="report-card-header">
                             <div>
-                                <span class="report-badge">${REASON_LABELS[r.reason] || r.reason}</span>
+                                <span class="report-badge">${REASON_LABELS[r.reason]||r.reason}</span>
                                 <span class="report-time" style="margin-left:8px;">${timeAgo(r.time)}</span>
                             </div>
-                            ${!r.reviewed ? `<button onclick="markReviewed('${r.id}')" style="padding:4px 10px; font-size:0.7rem; background:var(--surface);">✓ Прочитано</button>` : '<span style="font-size:0.7rem; color:var(--text-muted);">✓ просмотрено</span>'}
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                ${!r.reviewed ? `<button onclick="markReviewed('${r.id}')" style="padding:4px 10px;font-size:0.7rem;background:var(--surface);">✓</button>` : '<span style="font-size:0.7rem;color:var(--text-muted);">✓</span>'}
+                                <button onclick="banUser('${r.targetId}','${escHtml(r.targetName||r.targetId)}')" style="padding:4px 10px;font-size:0.7rem;background:#e53935;">🚫 БАН</button>
+                            </div>
                         </div>
                         <div class="report-card-body">
-                            <div class="report-from">👤 От: <b>${r.fromName || r.fromId}</b> → На: <b>${r.targetName || r.targetId}</b></div>
-                            ${r.comment ? `<div class="report-comment">"${escHtml(r.comment)}"</div>` : '<div style="color:var(--text-muted); font-size:0.78rem;">Без комментария</div>'}
+                            <div class="report-from">👤 От: <b>${r.fromName||r.fromId}</b> → На: <b>${r.targetName||r.targetId}</b></div>
+                            ${r.comment ? `<div class="report-comment">"${escHtml(r.comment)}"</div>` : '<div style="color:var(--text-muted);font-size:0.78rem;">Без комментария</div>'}
                         </div>
                     </div>`).join('')}`;
         }
 
         async function markReviewed(reportId) {
             await fetch('/api/admin/reports/reviewed', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
+                method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({adminId: myId, reportId})
             });
             loadAdminReports();
+        }
+
+        async function banUser(targetId, targetName) {
+            if(!confirm(`Забанить ${targetName}?`)) return;
+            const res = await fetch('/api/admin/ban', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({adminId: myId, targetId})
+            });
+            const data = await res.json();
+            if(data.success) { alert(`✓ ${targetName} забанен`); loadAdminReports(); }
+            else alert(data.error || 'Ошибка');
         }
 
         // ===== FAQ =====
