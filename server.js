@@ -158,7 +158,10 @@ app.get('/api/chats/:myId', (req, res) => {
                 id: u.id,
                 username: u.username,
                 online: isOnline(u.id),
-                unread
+                unread,
+                avatar: u.avatar || '',
+                verified: u.verified || false,
+                mood: u.mood || ''
             };
         });
 

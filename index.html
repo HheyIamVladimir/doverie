@@ -168,6 +168,54 @@
             --msg-their-color: #fce4fc;
             --shadow: 0 4px 24px rgba(224,64,251,0.12);
         }
+        [data-theme="violet"] {
+            --bg: #0e0818;
+            --surface: #160d24;
+            --surface2: #1e1230;
+            --accent: #7b2fff;
+            --accent2: #9d5fff;
+            --text: #ede0ff;
+            --text-muted: #6644aa;
+            --border: rgba(123,47,255,0.2);
+            --border-strong: rgba(123,47,255,0.55);
+            --msg-own-bg: #7b2fff;
+            --msg-own-color: #fff;
+            --msg-their-bg: #1e1230;
+            --msg-their-color: #ede0ff;
+            --shadow: 0 4px 24px rgba(123,47,255,0.15);
+        }
+        [data-theme="ocean"] {
+            --bg: #020e1a;
+            --surface: #061624;
+            --surface2: #0a2030;
+            --accent: #00b4d8;
+            --accent2: #48cae4;
+            --text: #caf0f8;
+            --text-muted: #3a7a90;
+            --border: rgba(0,180,216,0.2);
+            --border-strong: rgba(0,180,216,0.5);
+            --msg-own-bg: linear-gradient(135deg, #00b4d8, #0077b6);
+            --msg-own-color: #fff;
+            --msg-their-bg: #0a2030;
+            --msg-their-color: #caf0f8;
+            --shadow: 0 4px 24px rgba(0,180,216,0.12);
+        }
+        [data-theme="ash"] {
+            --bg: #181818;
+            --surface: #222222;
+            --surface2: #2c2c2c;
+            --accent: #aaaaaa;
+            --accent2: #cccccc;
+            --text: #eeeeee;
+            --text-muted: #666666;
+            --border: rgba(170,170,170,0.15);
+            --border-strong: rgba(170,170,170,0.4);
+            --msg-own-bg: #555555;
+            --msg-own-color: #fff;
+            --msg-their-bg: #2c2c2c;
+            --msg-their-color: #eeeeee;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
 
         /* ===== ОБОИ ===== */
         .chat-history.has-wallpaper {
@@ -1642,6 +1690,9 @@
                         <option value="coffee">☕ Кофе</option>
                         <option value="forest">🌿 Лес</option>
                         <option value="candy">🍬 Конфетка</option>
+                        <option value="violet">🟣 Фиолет</option>
+                        <option value="ocean">🌊 Океан</option>
+                        <option value="ash">🩶 Пепел</option>
                     </select>
                 </div>
 
@@ -1712,6 +1763,9 @@
                 <li><span class="rules-num">2</span>Спам сообщениями тоже запрещён по тем же причинам</li>
                 <li><span class="rules-num">3</span>Будь добрым — здесь живые люди</li>
                 <li><span class="rules-num">4</span>Не создавай группы и каналы без смысла — только если реально нужно :3</li>
+                <li><span class="rules-num">5</span>Не делись личными данными других пользователей без их согласия</li>
+                <li><span class="rules-num">6</span>Реклама и ссылки на сторонние ресурсы запрещены</li>
+                <li><span class="rules-num">7</span>За нарушение правил — бан без предупреждения</li>
             </ul>
             <button onclick="acceptRules()" style="width:100%; margin:0;">✓ ПРИНИМАЮ ПРАВИЛА</button>
         </div>
@@ -2064,30 +2118,33 @@
             document.getElementById('chat-list').innerHTML = chats.length
                 ? chats.map((c, i) => `
                     <div class="chat-item" style="animation-delay:${i * 0.04}s" onclick="startChat('${c.id}', '${c.username}')">
-                        <div class="avatar-wrap">
-                            ${getAvatar(c.username)}
+                        <div class="avatar-wrap" onclick="event.stopPropagation(); showProfile('${c.id}','${escHtml(c.username)}')" style="cursor:pointer;">
+                            ${c.avatar ? `<img src="${c.avatar}" class="avatar-img">` : getAvatar(c.username)}
                             <div class="online-dot ${c.online ? '' : 'offline'}"></div>
                         </div>
                         <div class="info">
-                            <b>${c.username}</b>
+                            <b>${c.username} ${c.verified ? '✅' : ''} ${c.mood || ''}</b>
                             <small>${c.online ? '🟢 онлайн' : '⚫ оффлайн'}</small>
                         </div>
                         ${c.unread > 0 ? `<div class="unread-badge">${c.unread > 99 ? '99+' : c.unread}</div>` : ''}
                     </div>`).join('')
-                : `<div style="text-align:center; color: var(--text-muted); padding: 40px; font-size: 0.85rem;">Нет чатов. Найди собеседника по ID ↑</div>`;
+                : `<div style="text-align:center; color: var(--text-muted); padding: 40px; font-size: 0.85rem;">Нет чатов. Найди собеседника по юзернейму ↑</div>`;
         }
 
         function startChat(id, name) {
             if(!id) return;
             currentTargetId = id;
             currentChatType = 'direct';
-            document.getElementById('chat-target-name').innerText = name || id;
+            const nameEl = document.getElementById('chat-target-name');
+            nameEl.innerText = name || id;
+            nameEl.style.cursor = 'pointer';
+            nameEl.onclick = () => showProfile(id, name || id);
             document.getElementById('chat-target-status').textContent = '';
             document.getElementById('typing-indicator').classList.remove('visible');
-            // Восстанавливаем кнопку репорта
             const btn = document.querySelector('#chat-window .header button:last-child');
             if(btn) { btn.innerHTML = '⚑'; btn.title = 'Пожаловаться'; btn.onclick = showReportModal; btn.style.color = '#e53935'; }
             showScreen('chat-window');
+            applyWallpaper();
             lastMsgHash = '';
             loadMessages();
             updateChatStatus();
@@ -2905,12 +2962,12 @@
 
         // ===== ПРОФИЛЬ ПО КЛИКУ =====
         async function showProfile(userId, username) {
-            // Загружаем данные с сервера
             const res = await fetch(`/api/profile/${userId}`);
             const data = await res.json();
 
             const avatarWrap = document.getElementById('profile-avatar-wrap');
-            const avatar = localStorage.getItem('avatar_' + userId) || data.avatar || '';
+            // Своя аватарка — из localStorage, чужая — с сервера
+            const avatar = (userId === myId ? localStorage.getItem('avatar_' + myId) : null) || data.avatar || '';
             if(avatar) {
                 avatarWrap.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
             } else {
@@ -2920,12 +2977,10 @@
                 avatarWrap.innerHTML = `<div style="width:100%;height:100%;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:bold;color:#fff;">${char}</div>`;
             }
 
-            document.getElementById('profile-name').textContent = username;
+            document.getElementById('profile-name').textContent = username + (data.verified ? ' ✅' : '');
             document.getElementById('profile-mood').textContent = data.mood || '';
-            document.getElementById('profile-bio').textContent = data.bio || 'Описание не указано';
-            const verified = document.getElementById('profile-verified');
-            verified.style.display = data.verified ? 'block' : 'none';
-
+            document.getElementById('profile-bio').textContent = data.bio || '—';
+            document.getElementById('profile-verified').style.display = data.verified ? 'block' : 'none';
             document.getElementById('profile-overlay').style.display = 'flex';
         }
 
