@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v2.0</title>
+    <title>Доверие v2.2.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -1361,16 +1361,164 @@
         .mood-btn.selected { border-color: var(--accent); background: rgba(255,102,0,0.1); }
         .mood-btn:active { transform: scale(0.9); }
 
-        /* ===== ВРЕМЯ СООБЩЕНИЯ ===== */
+        /* ===== ТЕМА PORTAL 2 ===== */
+        [data-theme="portal2"] {
+            --bg: #060a0f;
+            --surface: #0a1018;
+            --surface2: #101820;
+            --accent: #ff6a00;
+            --accent2: #ff9240;
+            --text: #e8f4ff;
+            --text-muted: #4a7090;
+            --border: rgba(255,106,0,0.25);
+            --border-strong: rgba(255,106,0,0.6);
+            --msg-own-bg: #ff6a00;
+            --msg-own-color: #fff;
+            --msg-their-bg: #0d1f35;
+            --msg-their-color: #e8f4ff;
+            --shadow: 0 4px 24px rgba(255,106,0,0.1);
+        }
+
+        /* Portal 2 animated background */
+        [data-theme="portal2"] .chat-history:not(.has-wallpaper) {
+            background: linear-gradient(160deg, #060a0f 0%, #060a0f 48%, #0d1a0a 52%, #060a0f 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        [data-theme="portal2"] .chat-history:not(.has-wallpaper)::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,120,255,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,106,0,0.12) 0%, transparent 70%);
+            animation: portalPulse 4s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+        [data-theme="portal2"] .chat-history:not(.has-wallpaper)::after {
+            content: '';
+            position: absolute;
+            left: 50%; top: 0; bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent);
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        [data-theme="portal2"] .message-wrap { position: relative; z-index: 1; }
+        @keyframes portalPulse {
+            0% {
+                background:
+                    radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,120,255,0.15) 0%, transparent 70%),
+                    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,106,0,0.08) 0%, transparent 70%);
+            }
+            100% {
+                background:
+                    radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,120,255,0.08) 0%, transparent 70%),
+                    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,106,0,0.15) 0%, transparent 70%);
+            }
+        }
+        [data-theme="portal2"] .msg-my .message {
+            box-shadow: 0 0 12px rgba(255,106,0,0.3);
+        }
+        [data-theme="portal2"] .msg-their .message {
+            background: #0d1f35;
+            box-shadow: 0 0 12px rgba(0,120,255,0.2);
+        }
+
+        /* ===== УВЕДОМЛЕНИЯ — запрос разрешения ===== */
+        .notif-request-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 800;
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .notif-request-card {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 18px;
+            padding: 28px 24px;
+            width: 88%; max-width: 340px;
+            text-align: center;
+            animation: popIn 0.3s ease;
+        }
+        .notif-request-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            animation: pulse 2s ease infinite;
+        }
+        .notif-request-card h3 {
+            margin: 0 0 8px;
+            color: var(--accent);
+            font-size: 1rem;
+            letter-spacing: 0.07em;
+        }
+        .notif-request-card p {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            margin: 0 0 20px;
+            line-height: 1.5;
+        }
+
+        /* ===== КНОПКА ↓ НОВЫЕ СООБЩЕНИЯ ===== */
+        .scroll-to-bottom {
+            position: absolute;
+            bottom: 70px;
+            right: 16px;
+            background: var(--accent);
+            color: var(--msg-own-color);
+            border: none;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: none;
+            align-items: center; justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            z-index: 10;
+            animation: fadeIn 0.2s ease;
+        }
+        .scroll-to-bottom.visible { display: flex; }
+        .scroll-to-bottom .new-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: #e53935;
+            color: #fff;
+            border-radius: 50%;
+            width: 18px; height: 18px;
+            font-size: 0.6rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ===== ВРЕМЯ СООБЩЕНИЯ (улучшенное) ===== */
         .msg-time {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.5);
-            margin-top: 3px;
+            font-size: 0.62rem;
+            color: rgba(255,255,255,0.45);
+            margin-top: 4px;
             text-align: right;
+            letter-spacing: 0.02em;
         }
         .msg-their .msg-time { color: var(--text-muted); text-align: left; }
 
-        /* ===== ПЕЧАТАЕТ ===== */
+        /* ===== КОПИРОВАНИЕ ===== */
+        .copy-toast {
+            position: fixed;
+            bottom: 80px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 0.82rem;
+            color: var(--text);
+            z-index: 9999;
+            animation: slideInTop 0.2s ease;
+            pointer-events: none;
+        }
+
+        /* ===== SCROLLBAR ===== */
         .typing-indicator {
             display: none;
             align-items: center;
@@ -1614,7 +1762,7 @@
         </div>
 
         <!-- CHAT WINDOW -->
-        <div id="chat-window" class="screen">
+        <div id="chat-window" class="screen" style="position:relative;">
             <div class="header">
                 <button class="secondary" onclick="showList()" style="padding: 8px 12px;">←</button>
                 <div class="chat-header-info">
@@ -1630,6 +1778,10 @@
                 <span id="typing-text"></span>
             </div>
             <div class="chat-history" id="chat-history"></div>
+            <button class="scroll-to-bottom" id="scroll-to-bottom-btn" onclick="scrollToBottom()" title="Новые сообщения">
+                ↓
+                <span class="new-badge" id="new-msg-badge" style="display:none;"></span>
+            </button>
             <div class="input-area">
                 <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="sendPhoto(this)">
                 <button class="photo-btn" onclick="document.getElementById('photoInput').click()" title="Отправить фото">📎</button>
@@ -1693,6 +1845,7 @@
                         <option value="violet">🟣 Фиолет</option>
                         <option value="ocean">🌊 Океан</option>
                         <option value="ash">🩶 Пепел</option>
+                        <option value="portal2">🌀 Portal 2</option>
                     </select>
                 </div>
 
@@ -1715,6 +1868,11 @@
                         <label>Выбор настроения</label>
                         <div class="toggle on" id="toggle-mood" onclick="toggleSetting('mood')"></div>
                     </div>
+                    <div class="toggle-row">
+                        <label>Уведомления о сообщениях</label>
+                        <div class="toggle on" id="toggle-notif" onclick="toggleNotifications()"></div>
+                    </div>
+                    <button onclick="requestNotifPermission()" style="width:100%; margin-top:8px; font-size:0.82rem;">🔔 ВКЛЮЧИТЬ УВЕДОМЛЕНИЯ</button>
                 </div>
 
                 <div class="settings-section">
@@ -1748,6 +1906,17 @@
             <div id="channel-posts" style="flex:1; overflow-y:auto; background: var(--bg);"></div>
         </div>
 
+    </div>
+
+    <!-- NOTIFICATION REQUEST -->
+    <div id="notif-request-overlay" class="notif-request-overlay" style="display:none;">
+        <div class="notif-request-card">
+            <div class="notif-request-icon">🔔</div>
+            <h3>УВЕДОМЛЕНИЯ</h3>
+            <p>Разреши уведомления чтобы получать сообщения даже когда вкладка свёрнута</p>
+            <button onclick="grantNotifPermission()" style="width:100%; margin:0 0 8px;">✓ РАЗРЕШИТЬ</button>
+            <button class="secondary" onclick="denyNotifPermission()" style="width:100%; margin:0;">НЕ СЕЙЧАС</button>
+        </div>
     </div>
 
     <!-- TOAST CONTAINER -->
@@ -2056,6 +2225,7 @@
             checkStreamBanner();
             if(window.streamBannerInt) clearInterval(window.streamBannerInt);
             window.streamBannerInt = setInterval(checkStreamBanner, 5000);
+            initNotifications();
 
             // Правила
             const showRules = localStorage.getItem('setting_rules') !== 'off';
@@ -2115,11 +2285,19 @@
             if(!myId || currentTargetId) return;
             const res = await fetch(`/api/chats/${myId}`);
             const chats = await res.json();
+
+            // Кэшируем аватарки в localStorage
+            chats.forEach(c => {
+                if(c.avatar) localStorage.setItem('avatar_cache_' + c.id, c.avatar);
+            });
+
             document.getElementById('chat-list').innerHTML = chats.length
-                ? chats.map((c, i) => `
+                ? chats.map((c, i) => {
+                    const avatarSrc = localStorage.getItem('avatar_cache_' + c.id) || c.avatar || '';
+                    return `
                     <div class="chat-item" style="animation-delay:${i * 0.04}s" onclick="startChat('${c.id}', '${c.username}')">
                         <div class="avatar-wrap" onclick="event.stopPropagation(); showProfile('${c.id}','${escHtml(c.username)}')" style="cursor:pointer;">
-                            ${c.avatar ? `<img src="${c.avatar}" class="avatar-img">` : getAvatar(c.username)}
+                            ${avatarSrc ? `<img src="${avatarSrc}" class="avatar-img">` : getAvatar(c.username)}
                             <div class="online-dot ${c.online ? '' : 'offline'}"></div>
                         </div>
                         <div class="info">
@@ -2127,7 +2305,8 @@
                             <small>${c.online ? '🟢 онлайн' : '⚫ оффлайн'}</small>
                         </div>
                         ${c.unread > 0 ? `<div class="unread-badge">${c.unread > 99 ? '99+' : c.unread}</div>` : ''}
-                    </div>`).join('')
+                    </div>`;
+                }).join('')
                 : `<div style="text-align:center; color: var(--text-muted); padding: 40px; font-size: 0.85rem;">Нет чатов. Найди собеседника по юзернейму ↑</div>`;
         }
 
@@ -2146,8 +2325,13 @@
             showScreen('chat-window');
             applyWallpaper();
             lastMsgHash = '';
+            lastMsgCount = 0;
+            newMsgCount = 0;
+            document.getElementById('scroll-to-bottom-btn').classList.remove('visible');
             loadMessages();
             updateChatStatus();
+            initScrollListener();
+            addLongPressListeners();
             if(window.msgInterval) clearInterval(window.msgInterval);
             window.msgInterval = setInterval(loadMessages, 2000);
             if(window.statusInt) clearInterval(window.statusInt);
@@ -2248,6 +2432,7 @@
         }
 
         let lastMsgHash = '';
+        let lastMsgCount = 0;
 
         async function loadMessages() {
             if(!myId) return;
@@ -2264,7 +2449,32 @@
             // Фикс мигания: не перерисовываем если данные не изменились
             const hash = JSON.stringify(messages.map(m => m.id || m.time + m.text + (m.reactions ? JSON.stringify(m.reactions) : '')));
             if(hash === lastMsgHash) return;
+
+            // Проверяем новые сообщения для уведомлений
+            if(lastMsgHash !== '' && messages.length > lastMsgCount) {
+                const newMsgs = messages.slice(lastMsgCount);
+                newMsgs.forEach(m => {
+                    if(m.fromId !== myId) {
+                        const senderName = m.fromName || document.getElementById('chat-target-name')?.innerText || 'Новое сообщение';
+                        const body = m.text || (m.photo ? '📷 Фото' : '');
+                        sendNotification(senderName, body);
+                    }
+                });
+                // Показываем кнопку ↓ если не внизу
+                const h = document.getElementById('chat-history');
+                const isBottom = h.scrollHeight - h.scrollTop <= h.clientHeight + 80;
+                if(!isBottom && newMsgs.some(m => m.fromId !== myId)) {
+                    newMsgCount += newMsgs.filter(m => m.fromId !== myId).length;
+                    const btn = document.getElementById('scroll-to-bottom-btn');
+                    const badge = document.getElementById('new-msg-badge');
+                    btn.classList.add('visible');
+                    badge.style.display = 'flex';
+                    badge.textContent = newMsgCount > 9 ? '9+' : newMsgCount;
+                }
+            }
+
             lastMsgHash = hash;
+            lastMsgCount = messages.length;
 
             const history = document.getElementById('chat-history');
             const wasBottom = history.scrollHeight - history.scrollTop <= history.clientHeight + 60;
@@ -2485,6 +2695,13 @@
                 container.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:40px;font-size:0.85rem;">Постов пока нет</div>`;
                 return;
             }
+
+            // Запоминаем открытые комментарии ДО перерисовки
+            const openComments = new Set();
+            container.querySelectorAll('.comments-section').forEach(el => {
+                if(el.style.display !== 'none') openComments.add(el.id.replace('comments-', ''));
+            });
+
             container.innerHTML = posts.map(p => `
                 <div class="channel-post">
                     <div class="channel-post-header">
@@ -2505,6 +2722,12 @@
                         </div>
                     </div>
                 </div>`).join('');
+
+            // Восстанавливаем открытые комментарии ПОСЛЕ перерисовки
+            for(const postId of openComments) {
+                const section = document.getElementById('comments-' + postId);
+                if(section) { section.style.display = 'block'; loadComments(postId); }
+            }
         }
 
         async function toggleComments(postId) {
@@ -2540,9 +2763,8 @@
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({authorId: myId, text})
             });
+            // Обновляем только комментарии, не весь список постов
             loadComments(postId);
-            // Обновить счётчик
-            loadChannelPosts();
         }
 
         function showCreateChannelModal() {
@@ -2741,6 +2963,142 @@
             });
             lastMsgHash = '';
             loadMessages();
+        }
+
+        // ===== УВЕДОМЛЕНИЯ =====
+        let notifEnabled = false;
+        let lastNotifMsgId = null;
+
+        function initNotifications() {
+            notifEnabled = localStorage.getItem('notif_enabled') !== 'off';
+            updateNotifToggle();
+            // Показываем запрос только если ещё не спрашивали
+            if(Notification.permission === 'default' && localStorage.getItem('notif_asked') !== '1') {
+                setTimeout(() => {
+                    document.getElementById('notif-request-overlay').style.display = 'flex';
+                }, 2000);
+            }
+        }
+
+        function updateNotifToggle() {
+            const t = document.getElementById('toggle-notif');
+            if(t) t.className = 'toggle ' + (notifEnabled && Notification.permission === 'granted' ? 'on' : '');
+        }
+
+        async function grantNotifPermission() {
+            document.getElementById('notif-request-overlay').style.display = 'none';
+            localStorage.setItem('notif_asked', '1');
+            const perm = await Notification.requestPermission();
+            if(perm === 'granted') {
+                notifEnabled = true;
+                localStorage.setItem('notif_enabled', 'on');
+                toast('🔔 Уведомления включены!', 'success');
+            } else {
+                toast('Уведомления отклонены', 'info');
+            }
+            updateNotifToggle();
+        }
+
+        function denyNotifPermission() {
+            document.getElementById('notif-request-overlay').style.display = 'none';
+            localStorage.setItem('notif_asked', '1');
+        }
+
+        function requestNotifPermission() {
+            if(Notification.permission === 'granted') {
+                toast('🔔 Уведомления уже включены!', 'info');
+                return;
+            }
+            document.getElementById('notif-request-overlay').style.display = 'flex';
+        }
+
+        function toggleNotifications() {
+            if(Notification.permission !== 'granted') {
+                requestNotifPermission();
+                return;
+            }
+            notifEnabled = !notifEnabled;
+            localStorage.setItem('notif_enabled', notifEnabled ? 'on' : 'off');
+            updateNotifToggle();
+            toast(notifEnabled ? '🔔 Уведомления включены' : '🔕 Уведомления выключены', 'info');
+        }
+
+        function sendNotification(title, body, icon) {
+            if(!notifEnabled || Notification.permission !== 'granted') return;
+            // Не уведомляем если вкладка активна и чат открыт
+            if(!document.hidden && document.getElementById('chat-window').classList.contains('active-screen')) return;
+            try {
+                const n = new Notification(title, { body, icon: icon || '/favicon.ico', badge: '/favicon.ico' });
+                n.onclick = () => { window.focus(); n.close(); };
+                setTimeout(() => n.close(), 5000);
+                playNotifSound();
+            } catch(e) {}
+        }
+
+        function playNotifSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+
+        // ===== КНОПКА ↓ НОВЫЕ СООБЩЕНИЯ =====
+        let newMsgCount = 0;
+
+        function scrollToBottom() {
+            const h = document.getElementById('chat-history');
+            h.scrollTo({ top: h.scrollHeight, behavior: 'smooth' });
+            newMsgCount = 0;
+            document.getElementById('scroll-to-bottom-btn').classList.remove('visible');
+            document.getElementById('new-msg-badge').style.display = 'none';
+        }
+
+        function initScrollListener() {
+            const h = document.getElementById('chat-history');
+            h.addEventListener('scroll', () => {
+                const isBottom = h.scrollHeight - h.scrollTop <= h.clientHeight + 80;
+                if(isBottom) {
+                    newMsgCount = 0;
+                    document.getElementById('scroll-to-bottom-btn').classList.remove('visible');
+                    document.getElementById('new-msg-badge').style.display = 'none';
+                }
+            });
+        }
+
+        // ===== КОПИРОВАНИЕ ПО ДОЛГОМУ НАЖАТИЮ =====
+        function addLongPressListeners() {
+            // Делегирование через chat-history
+            const h = document.getElementById('chat-history');
+            let pressTimer = null;
+            h.addEventListener('touchstart', e => {
+                const msg = e.target.closest('.message');
+                if(!msg) return;
+                pressTimer = setTimeout(() => {
+                    const text = msg.textContent.replace(/\d{1,2}:\d{2}/, '').trim();
+                    navigator.clipboard.writeText(text).then(() => {
+                        showCopyToast();
+                    }).catch(() => {});
+                }, 600);
+            });
+            h.addEventListener('touchend', () => clearTimeout(pressTimer));
+            h.addEventListener('touchmove', () => clearTimeout(pressTimer));
+        }
+
+        function showCopyToast() {
+            const el = document.createElement('div');
+            el.className = 'copy-toast';
+            el.textContent = '✓ Скопировано';
+            document.querySelector('.app-container').appendChild(el);
+            setTimeout(() => el.remove(), 1500);
         }
 
         // ===== СТРИМ =====
