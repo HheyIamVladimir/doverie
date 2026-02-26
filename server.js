@@ -774,10 +774,17 @@ app.post('/api/lambda', (req, res) => {
     }
 });
 
+// ==================== ONESIGNAL SERVICE WORKER ====================
+
+app.get('/OneSignalSDKWorker.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(`importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');`);
+});
+
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v2.2.0 Release ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v2.3.0 ЗАПУЩЕН
     Порт: ${PORT}
     Юзернеймы: включены ✓
     Группы: включены ✓
@@ -785,6 +792,7 @@ app.listen(PORT, () => {
     Стрим: включён ✓
     Реакции: включены ✓
     Репорты: включены ✓
+    OneSignal: включён ✓
     ======================================
     `);
 });

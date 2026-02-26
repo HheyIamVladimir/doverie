@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v2.2.0</title>
+    <title>Доверие v2.3.0</title>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "dde3323a-6e0f-4708-89ce-e31c415e6f3e",
+                notifyButton: { enable: false },
+                allowLocalhostAsSecureOrigin: true,
+            });
+        });
+    </script>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -215,6 +226,64 @@
             --msg-their-bg: #2c2c2c;
             --msg-their-color: #eeeeee;
             --shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+        [data-theme="cherry"] {
+            --bg: #0f0508;
+            --surface: #1a080f;
+            --surface2: #240c16;
+            --accent: #e8003a;
+            --accent2: #ff4d75;
+            --text: #ffe0e8;
+            --text-muted: #883344;
+            --border: rgba(232,0,58,0.2);
+            --border-strong: rgba(232,0,58,0.55);
+            --msg-own-bg: linear-gradient(135deg, #e8003a, #a00028);
+            --msg-own-color: #fff;
+            --msg-their-bg: #1f0a12;
+            --msg-their-color: #ffe0e8;
+            --shadow: 0 4px 24px rgba(232,0,58,0.12);
+        }
+        [data-theme="mint"] {
+            --bg: #f0faf5;
+            --surface: #ffffff;
+            --surface2: #e0f5ea;
+            --accent: #00a86b;
+            --accent2: #00cc88;
+            --text: #0a2a1a;
+            --text-muted: #4a9970;
+            --border: rgba(0,168,107,0.2);
+            --border-strong: rgba(0,168,107,0.5);
+            --msg-own-bg: #00a86b;
+            --msg-own-color: #fff;
+            --msg-their-bg: #e0f5ea;
+            --msg-their-color: #0a2a1a;
+            --shadow: 0 4px 24px rgba(0,168,107,0.1);
+        }
+
+        /* ===== ТЕМА ГРИД ===== */
+        .theme-btn {
+            padding: 10px 6px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 0.72rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .theme-btn:hover { border-color: var(--border-strong); background: var(--surface); }
+        .theme-btn.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+        .theme-preview {
+            width: 100%;
+            height: 28px;
+            border-radius: 6px;
+            margin-bottom: 2px;
         }
 
         /* ===== ОБОИ ===== */
@@ -1364,24 +1433,27 @@
         /* ===== ТЕМА PORTAL 2 ===== */
         [data-theme="portal2"] {
             --bg: #060a0f;
-            --surface: #0a1018;
-            --surface2: #101820;
-            --accent: #ff6a00;
-            --accent2: #ff9240;
+            --surface: #0d1117;
+            --surface2: #131c26;
+            --accent: #4d9fff;
+            --accent2: #7ab8ff;
             --text: #e8f4ff;
             --text-muted: #4a7090;
-            --border: rgba(255,106,0,0.25);
-            --border-strong: rgba(255,106,0,0.6);
+            --border: rgba(77,159,255,0.2);
+            --border-strong: rgba(77,159,255,0.5);
             --msg-own-bg: #ff6a00;
             --msg-own-color: #fff;
             --msg-their-bg: #0d1f35;
             --msg-their-color: #e8f4ff;
-            --shadow: 0 4px 24px rgba(255,106,0,0.1);
+            --shadow: 0 4px 24px rgba(77,159,255,0.08);
         }
 
         /* Portal 2 animated background */
+        [data-theme="portal2"] body {
+            background: #060a0f;
+        }
         [data-theme="portal2"] .chat-history:not(.has-wallpaper) {
-            background: linear-gradient(160deg, #060a0f 0%, #060a0f 48%, #0d1a0a 52%, #060a0f 100%);
+            background: #060a0f;
             position: relative;
             overflow: hidden;
         }
@@ -1389,10 +1461,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background:
-                radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,120,255,0.12) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,106,0,0.12) 0%, transparent 70%);
-            animation: portalPulse 4s ease-in-out infinite alternate;
+            animation: portalPulse 5s ease-in-out infinite alternate;
             pointer-events: none;
             z-index: 0;
         }
@@ -1400,31 +1469,46 @@
             content: '';
             position: absolute;
             left: 50%; top: 0; bottom: 0;
-            width: 1px;
-            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent);
+            width: 2px;
+            background: linear-gradient(to bottom,
+                transparent 0%,
+                rgba(150,150,150,0.08) 20%,
+                rgba(200,200,200,0.12) 50%,
+                rgba(150,150,150,0.08) 80%,
+                transparent 100%);
             transform: translateX(-50%);
             pointer-events: none;
             z-index: 0;
+            animation: portalLine 5s ease-in-out infinite alternate;
         }
         [data-theme="portal2"] .message-wrap { position: relative; z-index: 1; }
         @keyframes portalPulse {
             0% {
                 background:
-                    radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,120,255,0.15) 0%, transparent 70%),
-                    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,106,0,0.08) 0%, transparent 70%);
+                    radial-gradient(ellipse 70% 60% at 15% 50%, rgba(0,100,255,0.18) 0%, transparent 65%),
+                    radial-gradient(ellipse 70% 60% at 85% 50%, rgba(255,106,0,0.08) 0%, transparent 65%);
             }
             100% {
                 background:
-                    radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,120,255,0.08) 0%, transparent 70%),
-                    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(255,106,0,0.15) 0%, transparent 70%);
+                    radial-gradient(ellipse 70% 60% at 15% 50%, rgba(0,100,255,0.08) 0%, transparent 65%),
+                    radial-gradient(ellipse 70% 60% at 85% 50%, rgba(255,106,0,0.18) 0%, transparent 65%);
             }
         }
+        @keyframes portalLine {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
         [data-theme="portal2"] .msg-my .message {
-            box-shadow: 0 0 12px rgba(255,106,0,0.3);
+            box-shadow: 0 0 14px rgba(255,106,0,0.35);
         }
         [data-theme="portal2"] .msg-their .message {
-            background: #0d1f35;
-            box-shadow: 0 0 12px rgba(0,120,255,0.2);
+            background: #0d1f35 !important;
+            box-shadow: 0 0 14px rgba(0,100,255,0.25);
+        }
+        [data-theme="portal2"] .header {
+            background: linear-gradient(90deg, #060d1a, #0a0d10, #1a0800);
+            border-bottom: 1px solid rgba(100,150,255,0.15);
         }
 
         /* ===== УВЕДОМЛЕНИЯ — запрос разрешения ===== */
@@ -1832,21 +1916,8 @@
 
                 <div class="settings-section">
                     <label>ТЕМА ОФОРМЛЕНИЯ</label>
-                    <select onchange="setTheme(this.value)" id="themeSelect" style="margin-top:8px;">
-                        <option value="dark">🌑 Тёмная (по умолчанию)</option>
-                        <option value="light">☀️ Светлая</option>
-                        <option value="matrix">💚 Матрица</option>
-                        <option value="night">🌌 Ночная</option>
-                        <option value="sunset">🌇 Закат</option>
-                        <option value="ice">🧊 Лёд</option>
-                        <option value="coffee">☕ Кофе</option>
-                        <option value="forest">🌿 Лес</option>
-                        <option value="candy">🍬 Конфетка</option>
-                        <option value="violet">🟣 Фиолет</option>
-                        <option value="ocean">🌊 Океан</option>
-                        <option value="ash">🩶 Пепел</option>
-                        <option value="portal2">🌀 Portal 2</option>
-                    </select>
+                    <div id="theme-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;"></div>
+                    <input type="hidden" id="themeSelect">
                 </div>
 
                 <div class="settings-section">
@@ -2068,15 +2139,43 @@
         let currentChannelId = null;
 
         // ===== ТЕМА =====
+        const THEMES = [
+            { id: 'dark',    label: '🌑 Тёмная',    bg: '#0d0d0d', accent: '#ff6600' },
+            { id: 'light',   label: '☀️ Светлая',   bg: '#f5f0eb', accent: '#c85000' },
+            { id: 'matrix',  label: '💚 Матрица',   bg: '#000',    accent: '#00ff41' },
+            { id: 'night',   label: '🌌 Ночная',    bg: '#0a0a1a', accent: '#7c6bff' },
+            { id: 'sunset',  label: '🌇 Закат',     bg: '#1a0a0f', accent: '#ff3d7f' },
+            { id: 'ice',     label: '🧊 Лёд',       bg: '#e8f4f8', accent: '#0099cc' },
+            { id: 'coffee',  label: '☕ Кофе',      bg: '#1a1008', accent: '#c8822a' },
+            { id: 'forest',  label: '🌿 Лес',       bg: '#0a1a0e', accent: '#4caf50' },
+            { id: 'candy',   label: '🍬 Конфетка',  bg: '#1a0a1a', accent: '#e040fb' },
+            { id: 'violet',  label: '🟣 Фиолет',    bg: '#0e0818', accent: '#7b2fff' },
+            { id: 'ocean',   label: '🌊 Океан',     bg: '#020e1a', accent: '#00b4d8' },
+            { id: 'ash',     label: '🩶 Пепел',     bg: '#181818', accent: '#aaaaaa' },
+            { id: 'cherry',  label: '🍒 Вишня',     bg: '#0f0508', accent: '#e8003a' },
+            { id: 'mint',    label: '🌱 Мята',      bg: '#f0faf5', accent: '#00a86b' },
+            { id: 'portal2', label: '🌀 Portal 2',  bg: '#060a0f', accent: '#4d9fff' },
+        ];
+
+        function renderThemeGrid() {
+            const current = localStorage.getItem('app_theme') || 'dark';
+            const grid = document.getElementById('theme-grid');
+            if(!grid) return;
+            grid.innerHTML = THEMES.map(t => `
+                <button class="theme-btn ${t.id === current ? 'active' : ''}" onclick="setTheme('${t.id}'); renderThemeGrid();">
+                    <div class="theme-preview" style="background:linear-gradient(135deg, ${t.bg} 50%, ${t.accent} 150%);"></div>
+                    ${t.label}
+                </button>`).join('');
+        }
+
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('app_theme', theme);
         }
+
         function loadTheme() {
             const t = localStorage.getItem('app_theme') || 'dark';
             document.documentElement.setAttribute('data-theme', t);
-            const sel = document.getElementById('themeSelect');
-            if(sel) sel.value = t;
         }
         loadTheme();
 
@@ -2395,6 +2494,7 @@
             loadSettingsAvatar();
             loadSettingsBio();
             loadToggles();
+            renderThemeGrid();
             showScreen('settings-screen');
         }
 
@@ -2965,15 +3065,15 @@
             loadMessages();
         }
 
-        // ===== УВЕДОМЛЕНИЯ =====
+        // ===== УВЕДОМЛЕНИЯ (OneSignal) =====
         let notifEnabled = false;
-        let lastNotifMsgId = null;
 
-        function initNotifications() {
+        async function initNotifications() {
             notifEnabled = localStorage.getItem('notif_enabled') !== 'off';
             updateNotifToggle();
-            // Показываем запрос только если ещё не спрашивали
-            if(Notification.permission === 'default' && localStorage.getItem('notif_asked') !== '1') {
+
+            // Показываем свой красивый запрос если ещё не спрашивали
+            if(localStorage.getItem('notif_asked') !== '1') {
                 setTimeout(() => {
                     document.getElementById('notif-request-overlay').style.display = 'flex';
                 }, 2000);
@@ -2982,19 +3082,33 @@
 
         function updateNotifToggle() {
             const t = document.getElementById('toggle-notif');
-            if(t) t.className = 'toggle ' + (notifEnabled && Notification.permission === 'granted' ? 'on' : '');
+            if(t) t.className = 'toggle ' + (notifEnabled ? 'on' : '');
         }
 
         async function grantNotifPermission() {
             document.getElementById('notif-request-overlay').style.display = 'none';
             localStorage.setItem('notif_asked', '1');
-            const perm = await Notification.requestPermission();
-            if(perm === 'granted') {
-                notifEnabled = true;
-                localStorage.setItem('notif_enabled', 'on');
-                toast('🔔 Уведомления включены!', 'success');
-            } else {
-                toast('Уведомления отклонены', 'info');
+            try {
+                // OneSignal запрос
+                if(window.OneSignal) {
+                    await OneSignal.Notifications.requestPermission();
+                    const granted = OneSignal.Notifications.permission;
+                    if(granted) {
+                        notifEnabled = true;
+                        localStorage.setItem('notif_enabled', 'on');
+                        toast('🔔 Уведомления включены!', 'success');
+                    }
+                } else {
+                    // Fallback — браузерный API
+                    const perm = await Notification.requestPermission();
+                    if(perm === 'granted') {
+                        notifEnabled = true;
+                        localStorage.setItem('notif_enabled', 'on');
+                        toast('🔔 Уведомления включены!', 'success');
+                    }
+                }
+            } catch(e) {
+                toast('Не удалось включить уведомления', 'error');
             }
             updateNotifToggle();
         }
@@ -3005,34 +3119,36 @@
         }
 
         function requestNotifPermission() {
-            if(Notification.permission === 'granted') {
-                toast('🔔 Уведомления уже включены!', 'info');
-                return;
-            }
             document.getElementById('notif-request-overlay').style.display = 'flex';
         }
 
         function toggleNotifications() {
-            if(Notification.permission !== 'granted') {
-                requestNotifPermission();
-                return;
-            }
             notifEnabled = !notifEnabled;
             localStorage.setItem('notif_enabled', notifEnabled ? 'on' : 'off');
+            if(notifEnabled && localStorage.getItem('notif_asked') !== '1') {
+                requestNotifPermission();
+            }
             updateNotifToggle();
             toast(notifEnabled ? '🔔 Уведомления включены' : '🔕 Уведомления выключены', 'info');
         }
 
-        function sendNotification(title, body, icon) {
-            if(!notifEnabled || Notification.permission !== 'granted') return;
-            // Не уведомляем если вкладка активна и чат открыт
-            if(!document.hidden && document.getElementById('chat-window').classList.contains('active-screen')) return;
-            try {
-                const n = new Notification(title, { body, icon: icon || '/favicon.ico', badge: '/favicon.ico' });
-                n.onclick = () => { window.focus(); n.close(); };
-                setTimeout(() => n.close(), 5000);
-                playNotifSound();
-            } catch(e) {}
+        function sendNotification(title, body) {
+            if(!notifEnabled) return;
+            // Не уведомляем если вкладка активна
+            if(!document.hidden) return;
+
+            // Пробуем браузерный API (работает в браузере и некоторых WebView)
+            if(Notification.permission === 'granted') {
+                try {
+                    const n = new Notification(title, {
+                        body,
+                        icon: 'https://em-content.zobj.net/source/twitter/376/speech-balloon_1f4ac.png'
+                    });
+                    n.onclick = () => { window.focus(); n.close(); };
+                    setTimeout(() => n.close(), 5000);
+                } catch(e) {}
+            }
+            playNotifSound();
         }
 
         function playNotifSound() {
