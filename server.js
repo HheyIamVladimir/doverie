@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // Инициализация базы данных
-let db = { users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0 };
+let db = { users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], reports: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0 };
 
 function loadDB() {
     try {
@@ -24,12 +24,13 @@ function loadDB() {
             if (!parsed.channelPosts) parsed.channelPosts = [];
             if (!parsed.channelComments) parsed.channelComments = [];
             if (!parsed.lastChannelId) parsed.lastChannelId = 0;
+            if (!parsed.reports) parsed.reports = [];
             return parsed;
         }
     } catch (e) {
         console.error("[DB] Ошибка загрузки, создаю новую базу.");
     }
-    return { users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0 };
+    return { users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], reports: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0 };
 }
 
 function saveDB() {
@@ -90,25 +91,47 @@ app.post('/api/register', (req, res) => {
     const { username, password, platform } = req.body;
     if (!username || !password) return res.status(400).json({ success: false });
 
+    // Проверка уникальности юзернейма (без учёта регистра)
+    const exists = db.users.find(u => u.username.toLowerCase() === username.toLowerCase() ||
+        u.username.replace(/^\[.*?\]\s*/, '').toLowerCase() === username.toLowerCase());
+    if (exists) return res.json({ success: false, error: 'taken' });
+
     db.lastId++;
     const newId = db.lastId.toString();
-    const finalName = (platform === 'app' ? '[app] ' : '[site] ') + username;
+    const displayName = (platform === 'app' ? '[app] ' : '[site] ') + username;
 
-    db.users.push({ id: newId, username: finalName, password });
+    db.users.push({ id: newId, username: displayName, rawUsername: username.toLowerCase(), password });
     saveDB();
-    res.json({ success: true, id: newId });
+    res.json({ success: true, id: newId, displayName });
 });
 
-// Вход
+// Вход по юзернейму
 app.post('/api/login', (req, res) => {
-    const { id, password } = req.body;
-    const user = db.users.find(u => u.id === id && u.password === password);
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(401).json({ success: false });
+
+    // Ищем по rawUsername или по части displayName
+    const user = db.users.find(u =>
+        (u.rawUsername && u.rawUsername === username.toLowerCase() && u.password === password) ||
+        (u.username.replace(/^\[.*?\]\s*/, '').toLowerCase() === username.toLowerCase() && u.password === password)
+    );
     if (user) {
         pingOnline(user.id);
         res.json({ success: true, id: user.id, username: user.username });
     } else {
         res.status(401).json({ success: false });
     }
+});
+
+// Найти пользователя по юзернейму
+app.get('/api/user/find/:username', (req, res) => {
+    const search = req.params.username.toLowerCase();
+    const user = db.users.find(u =>
+        (u.rawUsername && u.rawUsername === search) ||
+        u.username.replace(/^\[.*?\]\s*/, '').toLowerCase() === search
+    );
+    if (!user) return res.status(404).json({ success: false, error: 'Не найден' });
+    res.json({ id: user.id, username: user.username });
 });
 
 // ==================== ЛИЧНЫЕ ЧАТЫ ====================
@@ -499,6 +522,59 @@ app.post('/api/reactions', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== РЕПОРТЫ ====================
+
+const ADMIN_USERNAME = 'adminjs';
+
+function isAdmin(userId) {
+    const user = db.users.find(u => u.id === userId);
+    if (!user) return false;
+    const raw = (user.rawUsername || user.username.replace(/^\[.*?\]\s*/, '')).toLowerCase();
+    return raw === ADMIN_USERNAME;
+}
+
+// Отправить жалобу
+app.post('/api/reports', (req, res) => {
+    const { fromId, targetId, targetName, reason, comment } = req.body;
+    if (!fromId || !targetId || !reason) return res.status(400).json({ success: false });
+
+    const from = db.users.find(u => u.id === fromId);
+    const reportId = `R-${Date.now()}`;
+
+    db.reports.push({
+        id: reportId,
+        fromId,
+        fromName: from ? from.username : fromId,
+        targetId,
+        targetName,
+        reason,
+        comment: comment || '',
+        time: Date.now(),
+        reviewed: false
+    });
+    saveDB();
+    console.log(`[REPORT] ${from?.username || fromId} пожаловался на ${targetName} (${reason})`);
+    res.json({ success: true });
+});
+
+// Получить все репорты (только для админа)
+app.post('/api/admin/reports', (req, res) => {
+    const { adminId } = req.body;
+    if (!isAdmin(adminId)) return res.status(403).json({ success: false, error: 'Нет доступа' });
+    res.json({ success: true, reports: db.reports });
+});
+
+// Пометить репорт как просмотренный
+app.post('/api/admin/reports/reviewed', (req, res) => {
+    const { adminId, reportId } = req.body;
+    if (!isAdmin(adminId)) return res.status(403).json({ success: false });
+    const report = db.reports.find(r => r.id === reportId);
+    if (!report) return res.status(404).json({ success: false });
+    report.reviewed = true;
+    saveDB();
+    res.json({ success: true });
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -516,12 +592,14 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v1.7.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v1.9.0 ЗАПУЩЕН
     Порт: ${PORT}
+    Юзернеймы: включены ✓
     Группы: включены ✓
     Каналы: включены ✓
     Стрим: включён ✓
     Реакции: включены ✓
+    Репорты: включены ✓
     ======================================
     `);
 });

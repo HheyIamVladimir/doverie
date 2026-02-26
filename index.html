@@ -987,6 +987,48 @@
             background: var(--border-strong);
         }
 
+        /* ===== АДМИН ПАНЕЛЬ ===== */
+        .report-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 10px 12px;
+            background: var(--surface2);
+            overflow: hidden;
+            animation: fadeIn 0.2s ease both;
+        }
+        .report-card-header {
+            padding: 10px 14px;
+            background: rgba(229,57,53,0.08);
+            border-bottom: 1px solid rgba(229,57,53,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .report-card-header b { color: #e53935; font-size: 0.85rem; }
+        .report-card-body { padding: 10px 14px; font-size: 0.85rem; line-height: 1.5; }
+        .report-card-body .report-from { color: var(--text-muted); font-size: 0.78rem; margin-bottom: 4px; }
+        .report-card-body .report-comment { color: var(--text); margin-top: 6px; font-style: italic; }
+        .report-time { font-size: 0.7rem; color: var(--text-muted); }
+        .report-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: #e53935;
+            color: #fff;
+            font-weight: bold;
+        }
+        .admin-stats {
+            padding: 14px 16px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .admin-stats b { color: var(--accent); font-size: 1rem; }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1021,13 +1063,13 @@
             <div class="auth-logo-wrap">
                 <span class="auth-logo-icon">🔐</span>
                 <h2 class="auth-title">ДОВЕРИЕ</h2>
-                <p class="auth-subtitle">v1.7.0 · защищённый мессенджер</p>
+                <p class="auth-subtitle">v1.9.0 · защищённый мессенджер</p>
             </div>
 
             <div style="padding: 0 20px 20px; overflow-y: auto; flex: 1;">
                 <div class="auth-block">
                     <h4>◆ РЕГИСТРАЦИЯ</h4>
-                    <input type="text" id="regName" placeholder="ИМЯ ПОЛЬЗОВАТЕЛЯ">
+                    <input type="text" id="regName" placeholder="ПРИДУМАЙ ИМЯ ПОЛЬЗОВАТЕЛЯ">
                     <input type="password" id="regPass" placeholder="ПАРОЛЬ">
                     <select id="platform">
                         <option value="app">📱 МОБ. ПРИЛОЖЕНИЕ</option>
@@ -1040,8 +1082,8 @@
 
                 <div class="auth-block">
                     <h4>◆ ВХОД</h4>
-                    <input type="text" id="loginId" placeholder="ВАШ ID">
-                    <input type="password" id="loginPass" placeholder="ВАШ ПАРОЛЬ">
+                    <input type="text" id="loginUsername" placeholder="ИМЯ ПОЛЬЗОВАТЕЛЯ">
+                    <input type="password" id="loginPass" placeholder="ПАРОЛЬ">
                     <button class="big-btn" onclick="login()">ВОЙТИ В СИСТЕМУ</button>
                 </div>
 
@@ -1068,8 +1110,8 @@
 
             <!-- Поиск -->
             <div class="search-bar" id="search-bar-chats">
-                <input type="text" id="searchId" placeholder="ПОИСК ПО ID...">
-                <button onclick="startChat(document.getElementById('searchId').value)">🔍</button>
+                <input type="text" id="searchUsername" placeholder="ПОИСК ПО ЮЗЕРНЕЙМУ...">
+                <button onclick="startChatByUsername(document.getElementById('searchUsername').value)">🔍</button>
             </div>
             <div class="search-bar" id="search-bar-groups" style="display:none; flex-direction: column; gap: 8px;">
                 <div style="display:flex; gap:6px; width:100%;">
@@ -1139,12 +1181,23 @@
                     <span id="chat-target-name" class="header-title">ЧАТ</span>
                     <span id="chat-target-status" class="chat-status"></span>
                 </div>
-                <div style="width: 44px;"></div>
+                <button class="secondary" onclick="showReportModal()" style="padding: 8px 12px; font-size: 1rem; color: #e53935;" title="Пожаловаться">⚑</button>
             </div>
             <div class="chat-history" id="chat-history"></div>
             <div class="input-area">
                 <input type="text" id="msgText" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()">
                 <button onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="admin-screen" class="screen">
+            <div class="header">
+                <div class="header-title">🛡 ПАНЕЛЬ АДМИНА</div>
+                <button class="secondary danger" onclick="logout()" style="padding: 8px 12px; font-size: 0.75rem;">ВЫЙТИ</button>
+            </div>
+            <div style="flex:1; overflow-y:auto; background: var(--bg);" id="admin-reports-list">
+                <div style="text-align:center; color:var(--text-muted); padding:40px; font-size:0.85rem;">Загрузка...</div>
             </div>
         </div>
 
@@ -1197,6 +1250,28 @@
             <div id="channel-posts" style="flex:1; overflow-y:auto; background: var(--bg);"></div>
         </div>
 
+    </div>
+
+    <!-- MODAL: репорт -->
+    <div id="modal-report" style="display:none;" class="modal-overlay">
+        <div class="modal">
+            <h4 style="color:#e53935;">⚑ ЖАЛОБА</h4>
+            <p style="color:var(--text-muted); font-size:0.82rem; margin: 0 0 10px;">На: <b id="report-target-name"></b></p>
+            <label style="font-size:0.78rem; color:var(--text-muted); letter-spacing:0.07em;">ПРИЧИНА</label>
+            <select id="report-reason" style="margin-top:6px;">
+                <option value="spam">🚫 Спам</option>
+                <option value="insult">😡 Оскорбления</option>
+                <option value="threat">⚠️ Угрозы</option>
+                <option value="scam">💸 Мошенничество</option>
+                <option value="other">📝 Другое</option>
+            </select>
+            <label style="font-size:0.78rem; color:var(--text-muted); letter-spacing:0.07em; margin-top:10px; display:block;">КОММЕНТАРИЙ (необязательно)</label>
+            <input type="text" id="report-comment" placeholder="Опиши ситуацию..." style="margin-top:6px;">
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('modal-report')">ОТМЕНА</button>
+                <button onclick="sendReport()" style="background:#e53935;">ОТПРАВИТЬ</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL: создать группу -->
@@ -1322,6 +1397,8 @@
             const password = document.getElementById('regPass').value;
             const platform = document.getElementById('platform').value;
             if(!username || !password) return showAuthMsg('⚠ Заполни все поля!');
+            if(username.length < 3) return showAuthMsg('⚠ Имя минимум 3 символа');
+            if(!/^[a-zA-Zа-яА-ЯёЁ0-9_]+$/.test(username)) return showAuthMsg('⚠ Только буквы, цифры и _');
 
             const res = await fetch('/api/register', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -1330,20 +1407,22 @@
             const data = await res.json();
             if(data.success) {
                 document.getElementById('auth-msg').innerHTML =
-                    `✓ Аккаунт создан! Ваш ID:<div class="id-display">${data.id}</div><small style="color:var(--text-muted)">Сохраните ID — он нужен для входа</small>`;
+                    `✓ Аккаунт создан! Добро пожаловать, <b>${data.displayName}</b>!<br><small style="color:var(--text-muted)">Теперь войди используя своё имя</small>`;
+            } else if(data.error === 'taken') {
+                showAuthMsg('❌ Это имя уже занято');
             } else {
                 showAuthMsg('❌ Ошибка регистрации');
             }
         }
 
         async function login() {
-            const id = document.getElementById('loginId').value.trim().toUpperCase();
+            const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPass').value;
-            if(!id || !password) return showAuthMsg('⚠ Введите ID и пароль');
+            if(!username || !password) return showAuthMsg('⚠ Введите имя и пароль');
 
             const res = await fetch('/api/login', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id, password})
+                body: JSON.stringify({username, password})
             });
             if(res.ok) {
                 const data = await res.json();
@@ -1356,7 +1435,7 @@
                     enterApp();
                 }
             } else {
-                showAuthMsg('❌ Неверный ID или пароль');
+                showAuthMsg('❌ Неверное имя или пароль');
             }
         }
 
@@ -1379,11 +1458,24 @@
             }
         }
 
+        const ADMIN_USERNAME = 'adminjs';
+
         function enterApp() {
             document.getElementById('display-my-name').innerText = tempUsername;
             loadTheme();
             const sel = document.getElementById('themeSelect');
             if(sel) sel.value = localStorage.getItem('app_theme') || 'dark';
+
+            // Если это админ — показываем панель репортов
+            const rawName = tempUsername.replace(/^\[.*?\]\s*/, '').toLowerCase();
+            if(rawName === ADMIN_USERNAME) {
+                showScreen('admin-screen');
+                loadAdminReports();
+                if(window.adminInt) clearInterval(window.adminInt);
+                window.adminInt = setInterval(loadAdminReports, 10000);
+                return;
+            }
+
             showScreen('list-screen');
             loadChatList();
             if(window.listInt) clearInterval(window.listInt);
@@ -1391,7 +1483,6 @@
             pingOnline();
             if(window.pingInt) clearInterval(window.pingInt);
             window.pingInt = setInterval(pingOnline, 20000);
-            // Проверяем активный стрим каждые 5 сек
             checkStreamBanner();
             if(window.streamBannerInt) clearInterval(window.streamBannerInt);
             window.streamBannerInt = setInterval(checkStreamBanner, 5000);
@@ -1428,7 +1519,7 @@
                         </div>
                         <div class="info">
                             <b>${c.username}</b>
-                            <small>${c.online ? '🟢 онлайн' : '⚫ оффлайн'} · #${c.id}</small>
+                            <small>${c.online ? '🟢 онлайн' : '⚫ оффлайн'}</small>
                         </div>
                         ${c.unread > 0 ? `<div class="unread-badge">${c.unread > 99 ? '99+' : c.unread}</div>` : ''}
                     </div>`).join('')
@@ -1437,17 +1528,26 @@
 
         function startChat(id, name) {
             if(!id) return;
-            currentTargetId = id.toUpperCase();
+            currentTargetId = id;
             currentChatType = 'direct';
-            document.getElementById('chat-target-name').innerText = name || '#' + id;
+            document.getElementById('chat-target-name').innerText = name || id;
             document.getElementById('chat-target-status').textContent = '';
             showScreen('chat-window');
+            lastMsgHash = '';
             loadMessages();
             updateChatStatus();
             if(window.msgInterval) clearInterval(window.msgInterval);
             window.msgInterval = setInterval(loadMessages, 2000);
             if(window.statusInt) clearInterval(window.statusInt);
             window.statusInt = setInterval(updateChatStatus, 15000);
+        }
+
+        async function startChatByUsername(username) {
+            if(!username) return;
+            const res = await fetch(`/api/user/find/${encodeURIComponent(username.trim())}`);
+            if(!res.ok) return alert('Пользователь не найден');
+            const data = await res.json();
+            startChat(data.id, data.username);
         }
 
         async function updateChatStatus() {
@@ -2007,6 +2107,95 @@
             showList();
         }
 
+        // ===== РЕПОРТЫ =====
+        function showReportModal() {
+            if(!currentTargetId) return;
+            const name = document.getElementById('chat-target-name').innerText;
+            document.getElementById('report-target-name').innerText = name;
+            document.getElementById('report-comment').value = '';
+            document.getElementById('report-reason').value = 'spam';
+            document.getElementById('modal-report').style.display = 'flex';
+        }
+
+        async function sendReport() {
+            const reason = document.getElementById('report-reason').value;
+            const comment = document.getElementById('report-comment').value.trim();
+            const targetName = document.getElementById('report-target-name').innerText;
+
+            const res = await fetch('/api/reports', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    fromId: myId,
+                    targetId: currentTargetId,
+                    targetName,
+                    reason,
+                    comment
+                })
+            });
+            const data = await res.json();
+            if(data.success) {
+                closeModal('modal-report');
+                alert('✓ Жалоба отправлена');
+            } else {
+                alert('Ошибка отправки');
+            }
+        }
+
+        // ===== АДМИН ПАНЕЛЬ =====
+        const REASON_LABELS = {
+            spam: '🚫 Спам',
+            insult: '😡 Оскорбления',
+            threat: '⚠️ Угрозы',
+            scam: '💸 Мошенничество',
+            other: '📝 Другое'
+        };
+
+        async function loadAdminReports() {
+            const res = await fetch('/api/admin/reports', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({adminId: myId})
+            });
+            if(!res.ok) return;
+            const data = await res.json();
+            const container = document.getElementById('admin-reports-list');
+
+            if(!data.reports || !data.reports.length) {
+                container.innerHTML = `
+                    <div class="admin-stats"><span>Всего жалоб: <b>0</b></span></div>
+                    <div style="text-align:center; color:var(--text-muted); padding:40px; font-size:0.85rem;">Жалоб нет 🎉</div>`;
+                return;
+            }
+
+            const reports = [...data.reports].reverse();
+            container.innerHTML = `
+                <div class="admin-stats">
+                    <span>Всего жалоб: <b>${data.reports.length}</b></span>
+                    <span>Новых: <b>${data.reports.filter(r => !r.reviewed).length}</b></span>
+                </div>
+                ${reports.map(r => `
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <div>
+                                <span class="report-badge">${REASON_LABELS[r.reason] || r.reason}</span>
+                                <span class="report-time" style="margin-left:8px;">${timeAgo(r.time)}</span>
+                            </div>
+                            ${!r.reviewed ? `<button onclick="markReviewed('${r.id}')" style="padding:4px 10px; font-size:0.7rem; background:var(--surface);">✓ Прочитано</button>` : '<span style="font-size:0.7rem; color:var(--text-muted);">✓ просмотрено</span>'}
+                        </div>
+                        <div class="report-card-body">
+                            <div class="report-from">👤 От: <b>${r.fromName || r.fromId}</b> → На: <b>${r.targetName || r.targetId}</b></div>
+                            ${r.comment ? `<div class="report-comment">"${escHtml(r.comment)}"</div>` : '<div style="color:var(--text-muted); font-size:0.78rem;">Без комментария</div>'}
+                        </div>
+                    </div>`).join('')}`;
+        }
+
+        async function markReviewed(reportId) {
+            await fetch('/api/admin/reports/reviewed', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({adminId: myId, reportId})
+            });
+            loadAdminReports();
+        }
+
         // ===== FAQ =====
         // ↓↓↓ РЕДАКТИРУЙ ВОПРОСЫ И ОТВЕТЫ ЗДЕСЬ ↓↓↓
         const FAQ_ITEMS = [
@@ -2072,6 +2261,7 @@
         // Enter в логине
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
+            document.getElementById('loginUsername').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
             document.getElementById('msgText').addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
         });
     </script>
