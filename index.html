@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v2.0.0</title>
+    <title>Доверие v2.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -119,6 +119,239 @@
             --msg-their-color: #f5e6d0;
             --shadow: 0 4px 24px rgba(200,130,42,0.1);
         }
+
+        [data-theme="coffee"] {
+            --bg: #1a1008;
+            --surface: #261808;
+            --surface2: #332010;
+            --accent: #c8822a;
+            --accent2: #e8a050;
+            --text: #f5e6d0;
+            --text-muted: #886644;
+            --border: rgba(200,130,42,0.2);
+            --border-strong: rgba(200,130,42,0.5);
+            --msg-own-bg: #c8822a;
+            --msg-own-color: #fff;
+            --msg-their-bg: #332010;
+            --msg-their-color: #f5e6d0;
+            --shadow: 0 4px 24px rgba(200,130,42,0.1);
+        }
+        [data-theme="forest"] {
+            --bg: #0a1a0e;
+            --surface: #0f2314;
+            --surface2: #162e1a;
+            --accent: #4caf50;
+            --accent2: #81c784;
+            --text: #e8f5e9;
+            --text-muted: #558b5a;
+            --border: rgba(76,175,80,0.2);
+            --border-strong: rgba(76,175,80,0.5);
+            --msg-own-bg: #4caf50;
+            --msg-own-color: #fff;
+            --msg-their-bg: #162e1a;
+            --msg-their-color: #e8f5e9;
+            --shadow: 0 4px 24px rgba(76,175,80,0.1);
+        }
+        [data-theme="candy"] {
+            --bg: #1a0a1a;
+            --surface: #2a0f2a;
+            --surface2: #3a1540;
+            --accent: #e040fb;
+            --accent2: #ea80fc;
+            --text: #fce4fc;
+            --text-muted: #aa44aa;
+            --border: rgba(224,64,251,0.2);
+            --border-strong: rgba(224,64,251,0.55);
+            --msg-own-bg: linear-gradient(135deg, #e040fb, #7c4dff);
+            --msg-own-color: #fff;
+            --msg-their-bg: #3a1540;
+            --msg-their-color: #fce4fc;
+            --shadow: 0 4px 24px rgba(224,64,251,0.12);
+        }
+
+        /* ===== ОБОИ ===== */
+        .chat-history.has-wallpaper {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* ===== ТОСТ-УВЕДОМЛЕНИЯ (вместо alert) ===== */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            width: 90%;
+            max-width: 380px;
+        }
+        .toast {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 0.88rem;
+            color: var(--text);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            animation: slideInTop 0.3s ease both;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.success { border-color: #4caf50; }
+        .toast.error { border-color: #e53935; }
+        .toast.info { border-color: var(--accent); }
+        @keyframes slideInTop {
+            from { opacity:0; transform: translateY(-16px); }
+            to { opacity:1; transform: translateY(0); }
+        }
+        @keyframes slideOutTop {
+            from { opacity:1; transform: translateY(0); }
+            to { opacity:0; transform: translateY(-16px); }
+        }
+
+        /* ===== ПРАВИЛА ===== */
+        .rules-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 700;
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .rules-modal {
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 18px;
+            padding: 26px 24px;
+            width: 90%; max-width: 360px;
+            animation: popIn 0.3s ease;
+        }
+        .rules-modal h3 {
+            margin: 0 0 6px;
+            color: var(--accent);
+            font-size: 1.1rem;
+            letter-spacing: 0.08em;
+        }
+        .rules-modal p {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            margin: 0 0 16px;
+        }
+        .rules-list {
+            list-style: none;
+            padding: 0; margin: 0 0 20px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .rules-list li {
+            display: flex; align-items: flex-start; gap: 10px;
+            font-size: 0.85rem; line-height: 1.4;
+            padding: 10px 12px;
+            background: var(--surface2);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent);
+        }
+        .rules-num {
+            background: var(--accent);
+            color: var(--msg-own-color);
+            border-radius: 50%;
+            width: 22px; height: 22px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* ===== ПРОФИЛЬ КАРТОЧКА ===== */
+        .profile-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 600;
+            display: flex; align-items: flex-end; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .profile-card {
+            background: var(--surface);
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            width: 100%;
+            animation: slideInUp 0.3s ease;
+            border-top: 1px solid var(--border-strong);
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .profile-card-avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            object-fit: cover;
+            display: block;
+            margin: 0 auto 12px;
+            font-size: 2.5rem;
+            background: var(--surface2);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .profile-card-name {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .profile-card-mood {
+            text-align: center;
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+        .profile-card-bio {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .profile-card-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--accent);
+            color: var(--msg-own-color);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            margin: 0 auto 16px;
+            display: block; width: fit-content;
+        }
+
+        /* ===== TOGGLE SWITCH ===== */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0;
+        }
+        .toggle-row label { font-size: 0.82rem; color: var(--text-muted); letter-spacing: 0.06em; }
+        .toggle {
+            position: relative; width: 44px; height: 24px;
+            background: var(--surface2);
+            border-radius: 12px;
+            border: 1px solid var(--border-strong);
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .toggle.on { background: var(--accent); border-color: var(--accent); }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 18px; height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px; left: 2px;
+            transition: transform 0.2s;
+        }
+        .toggle.on::after { transform: translateX(20px); }
 
         /* ===== БАЗОВЫЕ СТИЛИ ===== */
         * { box-sizing: border-box; }
@@ -1109,6 +1342,85 @@
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
+        /* ===== ФОТО В ЧАТЕ ===== */
+        .msg-photo {
+            max-width: 100%;
+            max-height: 260px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .photo-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.15s;
+            flex-shrink: 0;
+        }
+        .photo-btn:hover { color: var(--accent); }
+        .photo-btn:active { transform: scale(0.9); }
+
+        /* ===== АВАТАРКА ===== */
+        .avatar-img {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--border-strong);
+            flex-shrink: 0;
+        }
+        .avatar-upload-area {
+            text-align: center;
+            padding: 16px;
+            border: 2px dashed var(--border-strong);
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: border-color 0.2s;
+        }
+        .avatar-upload-area:hover { border-color: var(--accent); }
+        .avatar-preview {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            margin: 0 auto 10px;
+            display: block;
+        }
+
+        /* ===== УЧАСТНИКИ ГРУППЫ ===== */
+        .member-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            animation: slideInLeft 0.2s ease both;
+        }
+        .member-item .info { flex: 1; }
+        .member-item .info b { display: block; font-size: 0.9rem; }
+        .member-item .info small { color: var(--text-muted); font-size: 0.75rem; }
+
+        /* ===== ПРОСМОТР ФОТО ===== */
+        .photo-viewer {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .photo-viewer img {
+            max-width: 95vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1271,6 +1583,8 @@
             </div>
             <div class="chat-history" id="chat-history"></div>
             <div class="input-area">
+                <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="sendPhoto(this)">
+                <button class="photo-btn" onclick="document.getElementById('photoInput').click()" title="Отправить фото">📎</button>
                 <input type="text" id="msgText" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMessage()" oninput="handleTyping()">
                 <button onclick="sendMessage()">➤</button>
             </div>
@@ -1280,9 +1594,11 @@
         <div id="admin-screen" class="screen">
             <div class="header">
                 <div class="header-title">🛡 ПАНЕЛЬ АДМИНА</div>
-                <button class="secondary danger" onclick="logout()" style="padding: 8px 12px; font-size: 0.75rem;">ВЫЙТИ</button>
+                <button class="secondary" onclick="showAdminTab('reports')" id="admin-tab-reports" style="padding:6px 10px;font-size:0.75rem;">РЕПОРТЫ</button>
+                <button class="secondary" onclick="showAdminTab('users')" id="admin-tab-users" style="padding:6px 10px;font-size:0.75rem;">ЮЗЕРЫ</button>
+                <button class="secondary danger" onclick="logout()" style="padding: 6px 10px; font-size: 0.75rem;">ВЫЙТИ</button>
             </div>
-            <div style="flex:1; overflow-y:auto; background: var(--bg);" id="admin-reports-list">
+            <div style="flex:1; overflow-y:auto; background: var(--bg);" id="admin-content">
                 <div style="text-align:center; color:var(--text-muted); padding:40px; font-size:0.85rem;">Загрузка...</div>
             </div>
         </div>
@@ -1295,9 +1611,28 @@
                 <div style="width: 44px;"></div>
             </div>
             <div style="padding: 16px; overflow-y: auto; flex:1;">
+
+                <div class="settings-section">
+                    <label>АВАТАРКА</label>
+                    <div style="display:flex; align-items:center; gap:14px; margin-top:8px;">
+                        <div id="settings-avatar-preview" style="width:56px;height:56px;border-radius:50%;background:var(--surface2);border:2px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;">?</div>
+                        <div style="flex:1;">
+                            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+                            <button onclick="document.getElementById('avatarInput').click()" style="width:100%; margin:0;">📷 ЗАГРУЗИТЬ ФОТО</button>
+                            <button class="secondary danger" onclick="removeAvatar()" style="width:100%; margin-top:6px; font-size:0.8rem;">УДАЛИТЬ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <label>О СЕБЕ</label>
+                    <input type="text" id="setBio" placeholder="Короткое описание профиля..." maxlength="80" style="margin-top:8px;">
+                    <button onclick="saveBio()" style="margin-top:6px; width:100%;">СОХРАНИТЬ</button>
+                </div>
+
                 <div class="settings-section">
                     <label>ТЕМА ОФОРМЛЕНИЯ</label>
-                    <select onchange="setTheme(this.value)" id="themeSelect">
+                    <select onchange="setTheme(this.value)" id="themeSelect" style="margin-top:8px;">
                         <option value="dark">🌑 Тёмная (по умолчанию)</option>
                         <option value="light">☀️ Светлая</option>
                         <option value="matrix">💚 Матрица</option>
@@ -1305,17 +1640,43 @@
                         <option value="sunset">🌇 Закат</option>
                         <option value="ice">🧊 Лёд</option>
                         <option value="coffee">☕ Кофе</option>
+                        <option value="forest">🌿 Лес</option>
+                        <option value="candy">🍬 Конфетка</option>
                     </select>
                 </div>
+
+                <div class="settings-section">
+                    <label>ОБОИ ЧАТА</label>
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <input type="file" id="wallpaperInput" accept="image/*" style="display:none;" onchange="setWallpaper(this)">
+                        <button onclick="document.getElementById('wallpaperInput').click()" style="flex:1; margin:0;">🖼 ВЫБРАТЬ</button>
+                        <button class="secondary" onclick="removeWallpaper()" style="flex:1; margin:0;">УБРАТЬ</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <label>УВЕДОМЛЕНИЯ ПРИ ВХОДЕ</label>
+                    <div class="toggle-row">
+                        <label>Показывать правила</label>
+                        <div class="toggle on" id="toggle-rules" onclick="toggleSetting('rules')"></div>
+                    </div>
+                    <div class="toggle-row">
+                        <label>Выбор настроения</label>
+                        <div class="toggle on" id="toggle-mood" onclick="toggleSetting('mood')"></div>
+                    </div>
+                </div>
+
                 <div class="settings-section">
                     <label>ПИН-КОД ДЛЯ БЫСТРОГО ВХОДА</label>
                     <input type="password" id="setPin" maxlength="4" placeholder="4 цифры (пусто — удалить)">
                     <button class="big-btn" onclick="saveSettings()">СОХРАНИТЬ ПИН</button>
                 </div>
+
                 <div class="settings-section">
                     <label>СПЕЦИАЛЬНЫЕ ФУНКЦИИ</label>
                     <button class="big-btn" onclick="applyLambda()">АКТИВИРОВАТЬ λ</button>
                 </div>
+
                 <div class="settings-section">
                     <label>АККАУНТ</label>
                     <button class="big-btn danger" onclick="logout()">ВЫЙТИ ИЗ АККАУНТА</button>
@@ -1336,6 +1697,36 @@
             <div id="channel-posts" style="flex:1; overflow-y:auto; background: var(--bg);"></div>
         </div>
 
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- RULES OVERLAY -->
+    <div id="rules-overlay" class="rules-overlay" style="display:none;">
+        <div class="rules-modal">
+            <h3>📜 ПРАВИЛА</h3>
+            <p>Прочитай перед использованием</p>
+            <ul class="rules-list">
+                <li><span class="rules-num">1</span>Спам картинками запрещён — у нас маленький сервер, береги ресурсы</li>
+                <li><span class="rules-num">2</span>Спам сообщениями тоже запрещён по тем же причинам</li>
+                <li><span class="rules-num">3</span>Будь добрым — здесь живые люди</li>
+                <li><span class="rules-num">4</span>Не создавай группы и каналы без смысла — только если реально нужно :3</li>
+            </ul>
+            <button onclick="acceptRules()" style="width:100%; margin:0;">✓ ПРИНИМАЮ ПРАВИЛА</button>
+        </div>
+    </div>
+
+    <!-- PROFILE CARD OVERLAY -->
+    <div id="profile-overlay" class="profile-overlay" style="display:none;" onclick="closeProfile(event)">
+        <div class="profile-card" onclick="event.stopPropagation()">
+            <div id="profile-avatar-wrap" style="width:80px;height:80px;border-radius:50%;border:3px solid var(--accent);margin:0 auto 12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--surface2);"></div>
+            <div class="profile-card-name" id="profile-name"></div>
+            <div class="profile-card-mood" id="profile-mood"></div>
+            <div id="profile-verified" style="display:none;" class="profile-card-badge">✅ Верифицирован</div>
+            <div class="profile-card-bio" id="profile-bio"></div>
+            <button onclick="closeProfile()" style="width:100%; margin:0; background:var(--surface2);">ЗАКРЫТЬ</button>
+        </div>
     </div>
 
     <!-- MOOD PICKER -->
@@ -1366,6 +1757,17 @@
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('modal-report')">ОТМЕНА</button>
                 <button onclick="sendReport()" style="background:#e53935;">ОТПРАВИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: участники группы -->
+    <div id="modal-group-members" style="display:none;" class="modal-overlay">
+        <div class="modal" style="max-height:80vh; display:flex; flex-direction:column;">
+            <h4 id="modal-members-title">👥 УЧАСТНИКИ</h4>
+            <div id="modal-members-list" style="flex:1; overflow-y:auto; margin: 0 -22px; max-height:400px;"></div>
+            <div class="modal-actions" style="margin-top:14px;">
+                <button onclick="closeModal('modal-group-members')">ЗАКРЫТЬ</button>
             </div>
         </div>
     </div>
@@ -1558,18 +1960,34 @@
 
         const ADMIN_USERNAME = 'adminjs';
 
+        // ===== АВТОВХОД =====
+        function tryAutoLogin() {
+            const saved = localStorage.getItem('session');
+            if(!saved) return false;
+            try {
+                const s = JSON.parse(saved);
+                myId = s.id; tempUsername = s.username;
+                return true;
+            } catch(e) { return false; }
+        }
+
+        function saveSession() {
+            localStorage.setItem('session', JSON.stringify({id: myId, username: tempUsername}));
+        }
+
         function enterApp() {
+            saveSession();
             loadTheme();
             const sel = document.getElementById('themeSelect');
             if(sel) sel.value = localStorage.getItem('app_theme') || 'dark';
+            loadWallpaper();
+            loadToggles();
 
             const rawName = tempUsername.replace(/^\[.*?\]\s*/, '').toLowerCase();
             if(rawName === ADMIN_USERNAME) {
                 document.getElementById('display-my-name').innerText = '🛡 АДМИН';
                 showScreen('admin-screen');
-                loadAdminReports();
-                if(window.adminInt) clearInterval(window.adminInt);
-                window.adminInt = setInterval(loadAdminReports, 10000);
+                showAdminTab('reports');
                 return;
             }
 
@@ -1584,8 +2002,39 @@
             checkStreamBanner();
             if(window.streamBannerInt) clearInterval(window.streamBannerInt);
             window.streamBannerInt = setInterval(checkStreamBanner, 5000);
-            // Показываем mood picker при каждом входе
-            showMoodPicker();
+
+            // Правила
+            const showRules = localStorage.getItem('setting_rules') !== 'off';
+            if(showRules) {
+                document.getElementById('rules-overlay').style.display = 'flex';
+            } else {
+                // Эмодзи статус
+                const showMood = localStorage.getItem('setting_mood') !== 'off';
+                if(showMood) showMoodPicker();
+            }
+        }
+
+        // Принять правила
+        function acceptRules() {
+            document.getElementById('rules-overlay').style.display = 'none';
+            const showMood = localStorage.getItem('setting_mood') !== 'off';
+            if(showMood) showMoodPicker();
+        }
+
+        // Тогглы настроек
+        function loadToggles() {
+            const rules = localStorage.getItem('setting_rules') !== 'off';
+            const mood = localStorage.getItem('setting_mood') !== 'off';
+            const tr = document.getElementById('toggle-rules');
+            const tm = document.getElementById('toggle-mood');
+            if(tr) tr.className = 'toggle ' + (rules ? 'on' : '');
+            if(tm) tm.className = 'toggle ' + (mood ? 'on' : '');
+        }
+
+        function toggleSetting(key) {
+            const current = localStorage.getItem('setting_' + key) !== 'off';
+            localStorage.setItem('setting_' + key, current ? 'off' : 'on');
+            loadToggles();
         }
 
         async function pingOnline() {
@@ -1597,11 +2046,13 @@
         }
 
         function logout() {
+            localStorage.removeItem('session');
             myId = null; tempUsername = '';
             clearInterval(window.listInt);
             clearInterval(window.msgInterval);
             clearInterval(window.pingInt);
             clearInterval(window.statusInt);
+            clearInterval(window.adminInt);
             showScreen('auth-screen');
         }
 
@@ -1633,6 +2084,9 @@
             document.getElementById('chat-target-name').innerText = name || id;
             document.getElementById('chat-target-status').textContent = '';
             document.getElementById('typing-indicator').classList.remove('visible');
+            // Восстанавливаем кнопку репорта
+            const btn = document.querySelector('#chat-window .header button:last-child');
+            if(btn) { btn.innerHTML = '⚑'; btn.title = 'Пожаловаться'; btn.onclick = showReportModal; btn.style.color = '#e53935'; }
             showScreen('chat-window');
             lastMsgHash = '';
             loadMessages();
@@ -1697,6 +2151,9 @@
 
         function showSettings() {
             clearInterval(window.listInt);
+            loadSettingsAvatar();
+            loadSettingsBio();
+            loadToggles();
             showScreen('settings-screen');
         }
 
@@ -1704,10 +2161,10 @@
             const pin = document.getElementById('setPin').value;
             if(pin.length === 4 && /^\d+$/.test(pin)) {
                 localStorage.setItem('app_pin_' + myId, pin);
-                alert('✓ ПИН-код сохранён');
+                toast('✓ ПИН-код сохранён', 'success');
             } else if(pin.length === 0) {
                 localStorage.removeItem('app_pin_' + myId);
-                alert('ПИН-код удалён');
+                toast('ПИН-код удалён', 'info');
             } else {
                 alert('ПИН должен состоять из 4 цифр');
             }
@@ -1777,15 +2234,21 @@
                 `<span class="reaction-chip ${users.includes(myId) ? 'mine' : ''}" onclick="toggleReaction('${msgId}','${emoji}')">${emoji} ${users.length}</span>`
             ).join('');
             const timeStr = m.time ? formatMsgTime(m.time) : '';
+            const photoHtml = m.photo ? `<img src="${m.photo}" class="msg-photo" onclick="viewPhoto('${m.photo}')">` : '';
+            const deleteBtn = isMy ? `<button onclick="deleteMessage('${msgId}')" style="background:none;border:none;color:#e53935;font-size:0.9rem;padding:2px 6px;cursor:pointer;opacity:0.7;" title="Удалить">🗑</button>` : '';
 
             return `<div class="message-wrap ${isMy ? 'my' : 'their'}">
                 ${isGroup && !isMy ? `<div class="msg-sender">${m.fromName || m.fromId}</div>` : ''}
                 <div style="display:flex; align-items:flex-end; gap:5px; ${isMy ? 'flex-direction:row-reverse;' : ''}">
                     <div class="message ${isMy ? 'msg-my' : 'msg-their'}">
-                        ${escHtml(m.text)}
+                        ${photoHtml}
+                        ${m.text ? escHtml(m.text) : ''}
                         <div class="msg-time">${timeStr}</div>
                     </div>
-                    <button class="add-reaction-btn" onclick="showReactionPicker(event,'${msgId}')">+</button>
+                    <div style="display:flex;flex-direction:column;gap:3px;">
+                        <button class="add-reaction-btn" onclick="showReactionPicker(event,'${msgId}')">+</button>
+                        ${deleteBtn}
+                    </div>
                 </div>
                 ${reactionHtml ? `<div class="reaction-row">${reactionHtml}</div>` : ''}
             </div>`;
@@ -1852,7 +2315,11 @@
             currentChatType = 'group';
             currentTargetId = id;
             document.getElementById('chat-target-name').innerText = '👥 ' + name;
+            // Кнопка участников вместо репорта
+            const reportBtn = document.querySelector('#chat-window .header button[title="Пожаловаться"]');
+            if(reportBtn) { reportBtn.textContent = '👥'; reportBtn.title = 'Участники'; reportBtn.onclick = () => showGroupMembers(id, name); }
             showScreen('chat-window');
+            lastMsgHash = '';
             loadMessages();
             if(window.msgInterval) clearInterval(window.msgInterval);
             window.msgInterval = setInterval(loadMessages, 2000);
@@ -1891,7 +2358,7 @@
             if(data.success) {
                 document.getElementById('searchGroupId').value = '';
                 loadGroupList();
-                alert('✓ Ты вступил в группу!');
+                toast('✓ Ты вступил в группу!', 'success');
             } else {
                 alert(data.error || 'Группа не найдена');
             }
@@ -1906,7 +2373,7 @@
 
         function copyGroupId() {
             const id = document.getElementById('modal-group-info-id').innerText;
-            navigator.clipboard.writeText(id).then(() => alert('✓ ID скопирован')).catch(() => alert(id));
+            navigator.clipboard.writeText(id).then(() => toast('✓ ID скопирован', 'success')).catch(() => alert(id));
         }
 
         // ===== МОДАЛКИ =====
@@ -2088,11 +2555,135 @@
 
         function copyChannelId() {
             const id = document.getElementById('modal-channel-info-id').innerText;
-            navigator.clipboard.writeText(id).then(() => alert('✓ ID скопирован')).catch(() => alert(id));
+            navigator.clipboard.writeText(id).then(() => toast('✓ ID скопирован', 'success')).catch(() => alert(id));
         }
 
         function escHtml(text) {
             return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // ===== ФОТО =====
+        async function sendPhoto(input) {
+            const file = input.files[0];
+            if(!file) return;
+            input.value = '';
+
+            // Сжимаем в canvas
+            const base64 = await compressImage(file, 800, 0.7);
+
+            if(currentChatType === 'group') {
+                await fetch('/api/group-messages', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({fromId: myId, groupId: currentGroupId, text: '', photo: base64})
+                });
+            } else {
+                await fetch('/api/messages', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({fromId: myId, toId: currentTargetId, text: '', photo: base64})
+                });
+            }
+            lastMsgHash = '';
+            loadMessages();
+        }
+
+        function compressImage(file, maxWidth, quality) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if(w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function viewPhoto(src) {
+            const viewer = document.createElement('div');
+            viewer.className = 'photo-viewer';
+            viewer.innerHTML = `<img src="${src}" onclick="this.parentElement.remove()">`;
+            viewer.onclick = e => { if(e.target === viewer) viewer.remove(); };
+            document.body.appendChild(viewer);
+        }
+
+        // ===== АВАТАРКА =====
+        async function uploadAvatar(input) {
+            const file = input.files[0];
+            if(!file) return;
+            input.value = '';
+            const base64 = await compressImage(file, 200, 0.8);
+            // Показываем превью
+            const preview = document.getElementById('settings-avatar-preview');
+            preview.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            // Сохраняем
+            await fetch('/api/avatar', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({userId: myId, avatar: base64})
+            });
+            localStorage.setItem('avatar_' + myId, base64);
+            toast('✓ Аватарка сохранена!', 'success');
+        }
+
+        async function removeAvatar() {
+            await fetch('/api/avatar', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({userId: myId, avatar: ''})
+            });
+            localStorage.removeItem('avatar_' + myId);
+            document.getElementById('settings-avatar-preview').innerHTML = '?';
+        }
+
+        function getAvatarImg(userId, username, size) {
+            // Сначала проверяем кэш
+            const cached = localStorage.getItem('avatar_' + userId);
+            if(cached) return `<img src="${cached}" class="avatar-img" style="width:${size}px;height:${size}px;">`;
+            return getAvatar(username);
+        }
+
+        function loadSettingsAvatar() {
+            const cached = localStorage.getItem('avatar_' + myId);
+            const preview = document.getElementById('settings-avatar-preview');
+            if(preview) {
+                if(cached) preview.innerHTML = `<img src="${cached}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                else preview.innerHTML = '?';
+            }
+        }
+
+        // ===== УЧАСТНИКИ ГРУППЫ =====
+        async function showGroupMembers(groupId, groupName) {
+            const res = await fetch(`/api/groups/members/${groupId}`);
+            const data = await res.json();
+            document.getElementById('modal-members-title').innerText = `👥 ${groupName} · ${data.length} участн.`;
+            document.getElementById('modal-members-list').innerHTML = data.map((m, i) => `
+                <div class="member-item" style="animation-delay:${i*0.04}s">
+                    <div class="avatar-wrap">
+                        ${getAvatarImg(m.id, m.username, 38)}
+                        <div class="online-dot ${m.online ? '' : 'offline'}"></div>
+                    </div>
+                    <div class="info">
+                        <b>${m.username} ${m.mood || ''}</b>
+                        <small>${m.online ? '🟢 онлайн' : '⚫ оффлайн'}${m.isCreator ? ' · 👑 создатель' : ''}</small>
+                    </div>
+                </div>`).join('');
+            document.getElementById('modal-group-members').style.display = 'flex';
+        }
+
+        // ===== УДАЛЕНИЕ СООБЩЕНИЙ =====
+        async function deleteMessage(msgId) {
+            if(!confirm('Удалить сообщение?')) return;
+            await fetch('/api/messages/delete', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({msgId, userId: myId, chatType: currentChatType, chatId: currentChatType === 'group' ? currentGroupId : currentTargetId})
+            });
+            lastMsgHash = '';
+            loadMessages();
         }
 
         // ===== СТРИМ =====
@@ -2121,7 +2712,6 @@
             const res = await fetch('/api/stream/check');
             const data = await res.json();
             if(data.active) return alert('Уже идёт трансляция! Сначала дождись её завершения.');
-
             const ok = await fetch('/api/stream/start', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({hostId: myId})
@@ -2144,21 +2734,40 @@
             document.getElementById('stream-host-name').textContent = '';
             showScreen('stream-screen');
             loadStreamMessages();
-            // Таймер
+
+            // Пингуем присутствие зрителя
+            fetch('/api/stream/ping', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:myId})}).catch(()=>{});
+
+            // Таймер + счётчик зрителей
             clearInterval(streamTimerInt);
-            streamTimerInt = setInterval(() => {
+            streamTimerInt = setInterval(async () => {
                 const elapsed = Math.floor((Date.now() - streamStartTime) / 1000);
                 const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
                 const s = String(elapsed % 60).padStart(2, '0');
                 document.getElementById('stream-timer').textContent = `${m}:${s}`;
+
+                // Пинг зрителя
+                fetch('/api/stream/ping', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:myId})}).catch(()=>{});
+
+                // Если хост и нет зрителей >30 сек — показываем кнопку автозавершения
+                if(isHost) {
+                    const vRes = await fetch('/api/stream/viewers');
+                    const vData = await vRes.json();
+                    const viewers = vData.count || 0;
+                    document.getElementById('stream-host-name').textContent = `👁 ${viewers} зрит.`;
+                    // Если только хост (1 зритель = он сам) и прошло >30 сек
+                    if(viewers <= 1 && elapsed > 30) {
+                        document.getElementById('stream-host-name').textContent = `👁 Нет зрителей · нажми ✕ чтобы завершить`;
+                    }
+                }
             }, 1000);
-            // Поллинг сообщений
+
+            // Поллинг
             clearInterval(streamPollInt);
             streamPollInt = setInterval(async () => {
                 const res = await fetch('/api/stream/check');
                 const data = await res.json();
                 if(!data.active) {
-                    // Трансляция завершена
                     clearInterval(streamPollInt);
                     clearInterval(streamTimerInt);
                     const elapsed = Math.floor((Date.now() - streamStartTime) / 1000);
@@ -2224,6 +2833,211 @@
             clearInterval(streamPollInt);
             clearInterval(streamTimerInt);
             showList();
+        }
+
+        // ===== TOAST (вместо alert) =====
+        function toast(msg, type = 'info', duration = 3000) {
+            const icons = { success: '✓', error: '✕', info: 'ℹ' };
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.animation = 'slideOutTop 0.3s ease forwards';
+                setTimeout(() => el.remove(), 300);
+            }, duration);
+        }
+
+        // ===== ОБОИ =====
+        function setWallpaper(input) {
+            const file = input.files[0];
+            if(!file) return;
+            input.value = '';
+            compressImage(file, 1200, 0.7).then(b64 => {
+                localStorage.setItem('wallpaper_' + myId, b64);
+                applyWallpaper();
+                toast('✓ Обои установлены!', 'success');
+            });
+        }
+
+        function removeWallpaper() {
+            localStorage.removeItem('wallpaper_' + myId);
+            const h = document.getElementById('chat-history');
+            h.style.backgroundImage = '';
+            h.classList.remove('has-wallpaper');
+            toast('Обои убраны', 'info');
+        }
+
+        function loadWallpaper() {
+            applyWallpaper();
+        }
+
+        function applyWallpaper() {
+            if(!myId) return;
+            const wp = localStorage.getItem('wallpaper_' + myId);
+            const h = document.getElementById('chat-history');
+            if(wp) {
+                h.style.backgroundImage = `url(${wp})`;
+                h.classList.add('has-wallpaper');
+            } else {
+                h.style.backgroundImage = '';
+                h.classList.remove('has-wallpaper');
+            }
+        }
+
+        // ===== ОПИСАНИЕ ПРОФИЛЯ =====
+        async function saveBio() {
+            const bio = document.getElementById('setBio').value.trim();
+            await fetch('/api/bio', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({userId: myId, bio})
+            });
+            localStorage.setItem('bio_' + myId, bio);
+            toast('✓ Описание сохранено', 'success');
+        }
+
+        function loadSettingsBio() {
+            const bio = localStorage.getItem('bio_' + myId) || '';
+            const el = document.getElementById('setBio');
+            if(el) el.value = bio;
+        }
+
+        // ===== ПРОФИЛЬ ПО КЛИКУ =====
+        async function showProfile(userId, username) {
+            // Загружаем данные с сервера
+            const res = await fetch(`/api/profile/${userId}`);
+            const data = await res.json();
+
+            const avatarWrap = document.getElementById('profile-avatar-wrap');
+            const avatar = localStorage.getItem('avatar_' + userId) || data.avatar || '';
+            if(avatar) {
+                avatarWrap.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            } else {
+                const colors = ['#ff6600','#7c6bff','#00cc33','#e040fb','#0099cc'];
+                const char = username.replace(/^\[.*?\]\s*/,'')[0]?.toUpperCase() || '?';
+                const color = colors[char.charCodeAt(0) % colors.length];
+                avatarWrap.innerHTML = `<div style="width:100%;height:100%;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:bold;color:#fff;">${char}</div>`;
+            }
+
+            document.getElementById('profile-name').textContent = username;
+            document.getElementById('profile-mood').textContent = data.mood || '';
+            document.getElementById('profile-bio').textContent = data.bio || 'Описание не указано';
+            const verified = document.getElementById('profile-verified');
+            verified.style.display = data.verified ? 'block' : 'none';
+
+            document.getElementById('profile-overlay').style.display = 'flex';
+        }
+
+        function closeProfile(e) {
+            if(!e || e.target === document.getElementById('profile-overlay')) {
+                document.getElementById('profile-overlay').style.display = 'none';
+            }
+        }
+
+        // ===== ВЕРИФИКАЦИЯ =====
+        async function verifyUser(targetId, targetName) {
+            const res = await fetch('/api/admin/verify', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({adminId: myId, targetId})
+            });
+            const data = await res.json();
+            if(data.success) toast(`✓ ${targetName} верифицирован`, 'success');
+            else toast(data.error || 'Ошибка', 'error');
+            loadAdminUsers();
+        }
+
+        async function unverifyUser(targetId, targetName) {
+            const res = await fetch('/api/admin/unverify', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({adminId: myId, targetId})
+            });
+            if((await res.json()).success) toast(`Верификация убрана у ${targetName}`, 'info');
+            loadAdminUsers();
+        }
+
+        // ===== НОВАЯ АДМИНКА =====
+        let currentAdminTab = 'reports';
+
+        function showAdminTab(tab) {
+            currentAdminTab = tab;
+            if(tab === 'reports') loadAdminReports();
+            else loadAdminUsers();
+        }
+
+        async function loadAdminReports() {
+            const res = await fetch('/api/admin/reports', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({adminId: myId})
+            });
+            if(!res.ok) { document.getElementById('admin-content').innerHTML = '<div style="text-align:center;color:#e53935;padding:40px;">Нет доступа</div>'; return; }
+            const data = await res.json();
+            const container = document.getElementById('admin-content');
+            if(!data.reports || !data.reports.length) {
+                container.innerHTML = `<div class="admin-stats"><span>Жалоб: <b>0</b></span></div>
+                    <div style="text-align:center;color:var(--text-muted);padding:40px;font-size:0.85rem;">Жалоб нет 🎉</div>`;
+                return;
+            }
+            const reports = [...data.reports].reverse();
+            container.innerHTML = `
+                <div class="admin-stats">
+                    <span>Всего: <b>${data.reports.length}</b></span>
+                    <span>Новых: <b>${data.reports.filter(r=>!r.reviewed).length}</b></span>
+                </div>
+                ${reports.map(r => `
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <div>
+                                <span class="report-badge">${REASON_LABELS[r.reason]||r.reason}</span>
+                                <span class="report-time" style="margin-left:8px;">${timeAgo(r.time)}</span>
+                            </div>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                ${!r.reviewed ? `<button onclick="markReviewed('${r.id}')" style="padding:4px 10px;font-size:0.7rem;background:var(--surface);">✓</button>` : '<span style="font-size:0.7rem;color:var(--text-muted);">✓</span>'}
+                                <button onclick="banUser('${r.targetId}','${escHtml(r.targetName||r.targetId)}')" style="padding:4px 10px;font-size:0.7rem;background:#e53935;">🚫</button>
+                            </div>
+                        </div>
+                        <div class="report-card-body">
+                            <div class="report-from">👤 От: <b>${r.fromName||r.fromId}</b> → На: <b>${r.targetName||r.targetId}</b></div>
+                            ${r.comment ? `<div class="report-comment">"${escHtml(r.comment)}"</div>` : '<div style="color:var(--text-muted);font-size:0.78rem;">Без комментария</div>'}
+                        </div>
+                    </div>`).join('')}`;
+        }
+
+        async function loadAdminUsers() {
+            const res = await fetch('/api/admin/users', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({adminId: myId})
+            });
+            if(!res.ok) return;
+            const data = await res.json();
+            const container = document.getElementById('admin-content');
+            container.innerHTML = `
+                <div class="admin-stats"><span>Всего пользователей: <b>${data.users.length}</b></span></div>
+                ${data.users.map(u => `
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <div style="font-size:0.85rem;">
+                                <b>${u.username}</b> ${u.verified ? '✅' : ''} ${u.banned ? '🚫' : ''}
+                            </div>
+                            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                                ${!u.verified
+                                    ? `<button onclick="verifyUser('${u.id}','${escHtml(u.username)}')" style="padding:3px 8px;font-size:0.68rem;background:#4caf50;">✅</button>`
+                                    : `<button onclick="unverifyUser('${u.id}','${escHtml(u.username)}')" style="padding:3px 8px;font-size:0.68rem;background:var(--surface);">✅↩</button>`}
+                                ${!u.banned
+                                    ? `<button onclick="banUser('${u.id}','${escHtml(u.username)}')" style="padding:3px 8px;font-size:0.68rem;background:#e53935;">🚫</button>`
+                                    : `<button onclick="unbanUser('${u.id}','${escHtml(u.username)}')" style="padding:3px 8px;font-size:0.68rem;background:var(--surface);">↩</button>`}
+                            </div>
+                        </div>
+                    </div>`).join('')}`;
+        }
+
+        async function unbanUser(targetId, targetName) {
+            await fetch('/api/admin/unban', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({adminId: myId, targetId})
+            });
+            toast(`✓ ${targetName} разбанен`, 'success');
+            loadAdminUsers();
         }
 
         // ===== ЭМОДЗИ СТАТУС =====
@@ -2312,7 +3126,7 @@
                 body: JSON.stringify({fromId: myId, targetId: currentTargetId, targetName, reason, comment})
             });
             const data = await res.json();
-            if(data.success) { closeModal('modal-report'); alert('✓ Жалоба отправлена'); }
+            if(data.success) { closeModal('modal-report'); toast('✓ Жалоба отправлена', 'success'); }
             else alert('Ошибка отправки');
         }
 
@@ -2438,7 +3252,7 @@
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id: myId})
             });
-            alert('λ активирована! Перезайдите для обновления.');
+            toast('λ активирована!', 'success');
         }
 
         // Enter в логине
@@ -2446,6 +3260,8 @@
             document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
             document.getElementById('loginUsername').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
             document.getElementById('msgText').addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+            // Автовход
+            if(tryAutoLogin()) enterApp();
         });
     </script>
 </body>

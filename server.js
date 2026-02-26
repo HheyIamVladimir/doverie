@@ -167,10 +167,11 @@ app.get('/api/chats/:myId', (req, res) => {
 
 // Отправить личное сообщение
 app.post('/api/messages', (req, res) => {
-    const { fromId, toId, text } = req.body;
-    if (!text || !fromId || !toId) return res.json({ success: false });
+    const { fromId, toId, text, photo } = req.body;
+    if(!fromId || !toId) return res.json({ success: false });
+    if(!text && !photo) return res.json({ success: false });
 
-    db.messages.push({ fromId, toId, text, time: Date.now() });
+    db.messages.push({ fromId, toId, text: text||'', photo: photo||'', time: Date.now() });
     saveDB();
     res.json({ success: true });
 });
@@ -271,8 +272,9 @@ app.get('/api/groups/info/:groupId', (req, res) => {
 
 // Отправить сообщение в группу
 app.post('/api/group-messages', (req, res) => {
-    const { fromId, groupId, text } = req.body;
-    if (!fromId || !groupId || !text) return res.status(400).json({ success: false });
+    const { fromId, groupId, text, photo } = req.body;
+    if (!fromId || !groupId) return res.status(400).json({ success: false });
+    if (!text && !photo) return res.status(400).json({ success: false });
 
     const group = db.groups.find(g => g.id === groupId);
     if (!group) return res.status(404).json({ success: false, error: 'Группа не найдена' });
@@ -281,7 +283,7 @@ app.post('/api/group-messages', (req, res) => {
     const sender = db.users.find(u => u.id === fromId);
     const fromName = sender ? sender.username : fromId;
 
-    db.groupMessages.push({ fromId, fromName, groupId, text, time: Date.now() });
+    db.groupMessages.push({ fromId, fromName, groupId, text: text||'', photo: photo||'', time: Date.now() });
     saveDB();
     res.json({ success: true });
 });
@@ -627,6 +629,134 @@ app.post('/api/admin/unban', (req, res) => {
     res.json({success:true});
 });
 
+// ==================== АВАТАРКА ====================
+
+app.post('/api/avatar', (req, res) => {
+    const { userId, avatar } = req.body;
+    const user = db.users.find(u => u.id === userId);
+    if(!user) return res.status(404).json({success:false});
+    user.avatar = avatar || '';
+    saveDB();
+    res.json({success:true});
+});
+
+// ==================== УЧАСТНИКИ ГРУППЫ ====================
+
+app.get('/api/groups/members/:groupId', (req, res) => {
+    const group = db.groups.find(g => g.id === req.params.groupId.toUpperCase());
+    if(!group) return res.status(404).json([]);
+    const members = group.members.map(uid => {
+        const u = db.users.find(u => u.id === uid);
+        if(!u) return null;
+        return {
+            id: u.id,
+            username: u.username,
+            mood: u.mood || '',
+            online: isOnline(u.id),
+            isCreator: uid === group.creatorId
+        };
+    }).filter(Boolean);
+    res.json(members);
+});
+
+// ==================== УДАЛЕНИЕ СООБЩЕНИЙ ====================
+
+app.post('/api/messages/delete', (req, res) => {
+    const { msgId, userId, chatType, chatId } = req.body;
+    if(!msgId || !userId) return res.status(400).json({success:false});
+
+    if(chatType === 'group') {
+        const idx = db.groupMessages.findIndex(m =>
+            (m.id || (m.fromId + '_' + m.time)) === msgId && m.fromId === userId
+        );
+        if(idx === -1) return res.status(403).json({success:false, error:'Нельзя удалить чужое'});
+        db.groupMessages.splice(idx, 1);
+    } else {
+        const idx = db.messages.findIndex(m =>
+            (m.id || (m.fromId + '_' + m.time)) === msgId && m.fromId === userId
+        );
+        if(idx === -1) return res.status(403).json({success:false, error:'Нельзя удалить чужое'});
+        db.messages.splice(idx, 1);
+    }
+    saveDB();
+    res.json({success:true});
+});
+
+// ==================== СТРИМ: счётчик участников ====================
+
+// Пинг участника стрима
+const streamViewers = new Map(); // userId -> lastSeen
+
+app.post('/api/stream/ping', (req, res) => {
+    const { userId } = req.body;
+    if(!userId || !activeStream) return res.json({success:false});
+    streamViewers.set(userId, Date.now());
+    res.json({success:true});
+});
+
+// Получить количество зрителей
+app.get('/api/stream/viewers', (req, res) => {
+    const now = Date.now();
+    const count = [...streamViewers.values()].filter(t => now - t < 10000).length;
+    res.json({count});
+});
+
+// ==================== ПРОФИЛЬ / BIO ====================
+
+app.post('/api/bio', (req, res) => {
+    const { userId, bio } = req.body;
+    const user = db.users.find(u => u.id === userId);
+    if(!user) return res.status(404).json({success:false});
+    user.bio = (bio || '').slice(0, 80);
+    saveDB();
+    res.json({success:true});
+});
+
+app.get('/api/profile/:userId', (req, res) => {
+    const user = db.users.find(u => u.id === req.params.userId);
+    if(!user) return res.status(404).json({});
+    res.json({
+        id: user.id,
+        username: user.username,
+        mood: user.mood || '',
+        bio: user.bio || '',
+        avatar: user.avatar || '',
+        verified: user.verified || false
+    });
+});
+
+// ==================== ВЕРИФИКАЦИЯ ====================
+
+app.post('/api/admin/verify', (req, res) => {
+    const { adminId, targetId } = req.body;
+    if(!isAdmin(adminId)) return res.status(403).json({success:false, error:'Нет доступа'});
+    const user = db.users.find(u => u.id === targetId);
+    if(!user) return res.status(404).json({success:false});
+    user.verified = true;
+    saveDB();
+    res.json({success:true});
+});
+
+app.post('/api/admin/unverify', (req, res) => {
+    const { adminId, targetId } = req.body;
+    if(!isAdmin(adminId)) return res.status(403).json({success:false});
+    const user = db.users.find(u => u.id === targetId);
+    if(!user) return res.status(404).json({success:false});
+    user.verified = false;
+    saveDB();
+    res.json({success:true});
+});
+
+// Список всех пользователей для админа
+app.post('/api/admin/users', (req, res) => {
+    const { adminId } = req.body;
+    if(!isAdmin(adminId)) return res.status(403).json({success:false});
+    const users = db.users
+        .filter(u => (u.rawUsername || u.username.replace(/^\[.*?\]\s*/,'')).toLowerCase() !== ADMIN_USERNAME)
+        .map(u => ({id: u.id, username: u.username, verified: u.verified||false, banned: u.banned||false}));
+    res.json({success:true, users});
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -644,7 +774,7 @@ app.post('/api/lambda', (req, res) => {
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v2.0.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v2.0 Release ЗАПУЩЕН
     Порт: ${PORT}
     Юзернеймы: включены ✓
     Группы: включены ✓
