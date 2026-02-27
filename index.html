@@ -2683,17 +2683,42 @@
             const bar = document.getElementById('splash-bar');
             const splash = document.getElementById('splash-screen');
             let startY = null;
+            let startX = null;
 
-            // Свайп вверх
-            splash.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive:true});
-            splash.addEventListener('touchend', e => {
-                if(startY !== null && startY - e.changedTouches[0].clientY > 60) hideSplash();
-                startY = null;
+            // Анимация полоски
+            if(bar) {
+                bar.style.transition = 'transform 0.15s, width 0.3s';
+                bar.addEventListener('touchstart', () => { bar.style.transform = 'scaleY(1.5)'; bar.style.background = 'var(--accent)'; });
+                bar.addEventListener('touchend', () => { bar.style.transform = ''; hideSplash(); });
+            }
+
+            // Свайп вверх по всему экрану
+            splash.addEventListener('touchstart', e => {
+                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX;
             }, {passive:true});
 
-            // Клик на полоску или тап
-            bar.addEventListener('click', hideSplash);
-            splash.addEventListener('click', hideSplash);
+            splash.addEventListener('touchmove', e => {
+                if(startY === null) return;
+                const dy = startY - e.touches[0].clientY;
+                const dx = Math.abs(startX - e.touches[0].clientX);
+                // Показываем что реагируем на свайп
+                if(dy > 10 && dy > dx) {
+                    splash.style.transform = `translateY(${-dy * 0.3}px)`;
+                }
+            }, {passive:true});
+
+            splash.addEventListener('touchend', e => {
+                if(startY === null) return;
+                const dy = startY - e.changedTouches[0].clientY;
+                const dx = Math.abs(startX - e.changedTouches[0].clientX);
+                splash.style.transform = '';
+                if(dy > 40 && dy > dx) hideSplash();
+                startY = null; startX = null;
+            }, {passive:true});
+
+            // Клик на полоску мышкой (для ПК)
+            if(bar) bar.addEventListener('click', hideSplash);
         }
 
         function hideSplash() {
@@ -3123,9 +3148,6 @@
                 }
                 // Звук при новом сообщении
                 if(newMsgs.some(m => m.fromId !== myId)) playNotifSound();
-                    badge.style.display = 'flex';
-                    badge.textContent = newMsgCount > 9 ? '9+' : newMsgCount;
-                }
             }
 
             lastMsgHash = hash;
