@@ -760,6 +760,29 @@ app.post('/api/admin/users', (req, res) => {
     res.json({success:true, users});
 });
 
+// ==================== СМЕНА ИМЕНИ ====================
+
+app.post('/api/change-username', (req, res) => {
+    const { userId, newUsername } = req.body;
+    if(!userId || !newUsername) return res.json({success:false, error:'Нет данных'});
+    const user = db.users.find(u => u.id === userId);
+    if(!user) return res.status(404).json({success:false, error:'Не найден'});
+    const taken = db.users.some(u => u.id !== userId &&
+        u.username.replace(/^\[.*?\]\s*/,'').toLowerCase() === newUsername.toLowerCase());
+    if(taken) return res.json({success:false, error:'Имя уже занято'});
+    const prefix = user.username.match(/^(\[.*?\]\s*)/)?.[1] || '';
+    user.username = prefix + newUsername;
+    saveDB();
+    res.json({success:true, username: user.username});
+});
+
+// ==================== SERVICE WORKER ====================
+
+app.get('/OneSignalSDKWorker.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(`importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');`);
+});
+
 // ==================== ПРОЧЕЕ ====================
 
 // Лямбда
@@ -774,17 +797,30 @@ app.post('/api/lambda', (req, res) => {
     }
 });
 
-// ==================== ONESIGNAL SERVICE WORKER ====================
+// ==================== СМЕНА ИМЕНИ ====================
 
-app.get('/OneSignalSDKWorker.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.send(`importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');`);
+app.post('/api/change-username', (req, res) => {
+    const { userId, newUsername } = req.body;
+    if(!userId || !newUsername) return res.status(400).json({success:false, error:'Нет данных'});
+    const user = db.users.find(u => u.id === userId);
+    if(!user) return res.status(404).json({success:false, error:'Юзер не найден'});
+    const trimmed = newUsername.trim();
+    if(trimmed.length < 2 || trimmed.length > 30) return res.json({success:false, error:'Неверная длина'});
+    // Проверяем уникальность
+    const taken = db.users.find(u => u.id !== userId &&
+        u.username.replace(/^\[.*?\]\s*/,'').toLowerCase() === trimmed.toLowerCase());
+    if(taken) return res.json({success:false, error:'Имя занято'});
+    // Сохраняем платформу если есть
+    const platform = user.username.match(/^\[(.*?)\]/);
+    user.username = platform ? `[${platform[1]}] ${trimmed}` : trimmed;
+    saveDB();
+    res.json({success:true, username: user.username});
 });
 
 app.listen(PORT, () => {
     console.log(`
     ======================================
-    СЕРВЕР "ДОВЕРИЕ" v2.3.0 ЗАПУЩЕН
+    СЕРВЕР "ДОВЕРИЕ" v2.4.0 ЗАПУЩЕН
     Порт: ${PORT}
     Юзернеймы: включены ✓
     Группы: включены ✓
@@ -792,7 +828,8 @@ app.listen(PORT, () => {
     Стрим: включён ✓
     Реакции: включены ✓
     Репорты: включены ✓
-    OneSignal: включён ✓
+    ======================================
+    `);
     ======================================
     `);
 });

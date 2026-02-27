@@ -3,18 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Доверие v2.3.0</title>
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.init({
-                appId: "dde3323a-6e0f-4708-89ce-e31c415e6f3e",
-                notifyButton: { enable: false },
-                allowLocalhostAsSecureOrigin: true,
-            });
-        });
-    </script>
+    <title>Доверие v2.4.0</title>
     <style>
         /* ===== ТЕМЫ ===== */
         :root {
@@ -744,6 +733,329 @@
             font-size: 2rem;
             width: 160px;
             letter-spacing: 0.3em;
+        }
+
+        /* ===== СПЛЭШ ЭКРАН ===== */
+        #splash-screen {
+            position: absolute; inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .splash-title {
+            font-size: 1.5rem;
+            letter-spacing: 0.18em;
+            color: var(--accent);
+            font-weight: bold;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        .splash-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.12em;
+        }
+        .splash-logo {
+            font-size: 3.5rem;
+            animation: floatLogo 3s ease-in-out infinite;
+            margin-bottom: 8px;
+        }
+        .splash-swipe-area {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 28px;
+            gap: 10px;
+        }
+        .splash-swipe-hint {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+        .splash-swipe-bar {
+            width: 120px;
+            height: 5px;
+            background: var(--text-muted);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(255,102,0,0.3); }
+            50% { text-shadow: 0 0 40px rgba(255,102,0,0.7); }
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* ===== ЧАСТИЦЫ ===== */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat linear infinite;
+            opacity: 0;
+        }
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        /* ===== БОКОВОЕ МЕНЮ (DRAWER) ===== */
+        .drawer-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0);
+            z-index: 400;
+            pointer-events: none;
+            transition: background 0.3s;
+        }
+        .drawer-overlay.open {
+            background: rgba(0,0,0,0.6);
+            pointer-events: all;
+        }
+        .drawer {
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 78%;
+            max-width: 300px;
+            background: var(--surface);
+            z-index: 401;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-strong);
+            box-shadow: 4px 0 30px rgba(0,0,0,0.5);
+        }
+        .drawer.open { transform: translateX(0); }
+        .drawer-header {
+            padding: 32px 20px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .drawer-avatar {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+        .drawer-name {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+        .drawer-mood { font-size: 1.2rem; }
+        .drawer-items { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .drawer-item {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.88rem;
+            letter-spacing: 0.06em;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+        .drawer-item:hover { background: var(--surface2); }
+        .drawer-item:active { background: var(--surface2); }
+        .drawer-item-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .drawer-item.danger { color: #e53935; }
+        .drawer-version {
+            padding: 12px 20px;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ===== ЭКРАН АККАУНТА ===== */
+        #account-screen {
+            background: var(--bg);
+        }
+        .account-hero {
+            background: var(--surface2);
+            padding: 30px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .account-avatar-wrap {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            background: var(--bg);
+            position: relative;
+            cursor: pointer;
+        }
+        .account-avatar-edit {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            border-radius: 50%;
+        }
+        .account-avatar-wrap:hover .account-avatar-edit { opacity: 1; }
+        .account-username {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+        .account-bio-preview {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* ===== ЭКРАН ПРАВИЛ ===== */
+        #rules-screen {
+            background: var(--bg);
+        }
+
+        /* ===== ХВОСТИКИ СООБЩЕНИЙ ===== */
+        .msg-my {
+            border-bottom-right-radius: 3px !important;
+            position: relative;
+        }
+        .msg-their {
+            border-bottom-left-radius: 3px !important;
+            position: relative;
+        }
+        .msg-my::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: -7px;
+            width: 0; height: 0;
+            border-style: solid;
+            border-width: 0 0 10px 8px;
+            border-color: transparent transparent var(--msg-own-bg) transparent;
+        }
+        .msg-their::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: -7px;
+            width: 0; height: 0;
+            border-style: solid;
+            border-width: 0 8px 10px 0;
+            border-color: transparent var(--msg-their-bg) transparent transparent;
+        }
+
+        /* ===== GLASSMORPHISM ===== */
+        .glass {
+            background: rgba(255,255,255,0.04) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08) !important;
+        }
+
+        /* ===== АНИМАЦИЯ ОТПРАВКИ ===== */
+        @keyframes msgSend {
+            0% { transform: translateY(20px) scale(0.9); opacity: 0; }
+            60% { transform: translateY(-3px) scale(1.02); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .msg-new { animation: msgSend 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+        /* ===== ПУЛЬСИРУЮЩИЙ ОНЛАЙН ===== */
+        .online-dot {
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: #4caf50;
+            border: 2px solid var(--surface);
+            position: absolute;
+            bottom: 0; right: 0;
+        }
+        .online-dot:not(.offline) {
+            animation: onlinePulse 2s ease-in-out infinite;
+        }
+        .online-dot.offline { background: #666; }
+        @keyframes onlinePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.6); }
+            50% { box-shadow: 0 0 0 4px rgba(76,175,80,0); }
+        }
+
+        /* ===== АНИМАЦИЯ РЕАКЦИИ ===== */
+        @keyframes reactionPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.5); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        .reaction-pop { animation: reactionPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        /* ===== КРАСИВЕЕ "ПЕЧАТАЕТ" ===== */
+        .typing-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: typingBounce 1.2s ease-in-out infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* ===== ПЛАВНЫЕ ПЕРЕХОДЫ ЭКРАНОВ ===== */
+        .screen {
+            animation: none;
+        }
+        .screen.slide-in {
+            animation: slideInRight 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        .screen.slide-out {
+            animation: slideOutLeft 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutLeft {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-30px); opacity: 0; }
+        }
+
+        /* ===== АВАТАРКА В ШАПКЕ ЧАТА ===== */
+        .chat-header-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--border-strong);
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            background: var(--surface2);
+            flex-shrink: 0;
+            cursor: pointer;
         }
 
         /* ===== AUTH SCREEN ===== */
@@ -1730,6 +2042,102 @@
 
     <div class="app-container">
 
+        <!-- СПЛЭШ ЭКРАН -->
+        <div id="splash-screen">
+            <canvas id="particle-canvas" style="position:absolute;inset:0;pointer-events:none;"></canvas>
+            <div class="splash-logo">💬</div>
+            <div class="splash-title">ДОВЕРИЕ</div>
+            <div class="splash-sub">МЕССЕНДЖЕР</div>
+            <div class="splash-swipe-area">
+                <div class="splash-swipe-hint">ПРОВЕДИ ВВЕРХ ЧТОБЫ ВОЙТИ</div>
+                <div class="splash-swipe-bar" id="splash-bar"></div>
+            </div>
+        </div>
+
+        <!-- DRAWER OVERLAY -->
+        <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+        <!-- DRAWER -->
+        <div class="drawer" id="drawer">
+            <div class="drawer-header">
+                <div class="drawer-avatar" id="drawer-avatar" onclick="openAccount()">?</div>
+                <div>
+                    <div class="drawer-name" id="drawer-name">—</div>
+                    <div class="drawer-mood" id="drawer-mood"></div>
+                </div>
+            </div>
+            <div class="drawer-items">
+                <div class="drawer-item" onclick="openAccount(); closeDrawer();">
+                    <span class="drawer-item-icon">👤</span> МОЙ АККАУНТ
+                </div>
+                <div class="drawer-item" onclick="showSettings(); closeDrawer();">
+                    <span class="drawer-item-icon">⚙️</span> НАСТРОЙКИ
+                </div>
+                <div class="drawer-item" onclick="showRulesScreen(); closeDrawer();">
+                    <span class="drawer-item-icon">📜</span> ПРАВИЛА
+                </div>
+                <div class="drawer-item" onclick="showFaq(); closeDrawer();">
+                    <span class="drawer-item-icon">❓</span> FAQ
+                </div>
+                <div class="drawer-item danger" onclick="logout()">
+                    <span class="drawer-item-icon">🚪</span> ВЫЙТИ
+                </div>
+            </div>
+            <div class="drawer-version">Доверие v2.4.0</div>
+        </div>
+
+        <!-- ACCOUNT SCREEN -->
+        <div id="account-screen" class="screen">
+            <div class="header">
+                <button class="secondary" onclick="showList()" style="padding:8px 12px;">←</button>
+                <div class="header-title">МОЙ АККАУНТ</div>
+                <div style="width:44px;"></div>
+            </div>
+            <div style="flex:1; overflow-y:auto;">
+                <div class="account-hero">
+                    <div class="account-avatar-wrap" onclick="document.getElementById('accountAvatarInput').click()">
+                        <div id="account-avatar-display" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;">?</div>
+                        <div class="account-avatar-edit">📷</div>
+                    </div>
+                    <input type="file" id="accountAvatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+                    <div class="account-username" id="account-username-display">—</div>
+                    <div class="account-bio-preview" id="account-bio-display">—</div>
+                </div>
+                <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+                    <div class="settings-section">
+                        <label>ИМЯ ПОЛЬЗОВАТЕЛЯ</label>
+                        <input type="text" id="newUsername" placeholder="Новый юзернейм..." maxlength="20" style="margin-top:8px;">
+                        <button onclick="changeUsername()" style="width:100%; margin-top:6px;">СМЕНИТЬ ИМЯ</button>
+                    </div>
+                    <div class="settings-section">
+                        <label>О СЕБЕ</label>
+                        <input type="text" id="accountBio" placeholder="Расскажи о себе..." maxlength="80" style="margin-top:8px;">
+                        <button onclick="saveAccountBio()" style="width:100%; margin-top:6px;">СОХРАНИТЬ</button>
+                    </div>
+                    <div class="settings-section">
+                        <label>АВАТАРКА</label>
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button onclick="document.getElementById('accountAvatarInput').click()" style="flex:1; margin:0;">📷 ЗАГРУЗИТЬ</button>
+                            <button class="secondary danger" onclick="removeAvatar()" style="flex:1; margin:0;">УДАЛИТЬ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RULES SCREEN -->
+        <div id="rules-screen" class="screen">
+            <div class="header">
+                <button class="secondary" onclick="showList()" style="padding:8px 12px;">←</button>
+                <div class="header-title">📜 ПРАВИЛА</div>
+                <div style="width:44px;"></div>
+            </div>
+            <div style="flex:1; overflow-y:auto; padding:16px;">
+                <ul class="rules-list" id="rules-list-full"></ul>
+                <button onclick="acceptRules()" style="width:100%; margin-top:16px;" id="rules-accept-btn">✓ ПРИНИМАЮ ПРАВИЛА</button>
+            </div>
+        </div>
+
         <!-- AUTH -->
         <div id="auth-screen" class="screen active-screen">
             <div class="auth-logo-wrap">
@@ -1769,8 +2177,9 @@
             <div id="stream-banner" onclick="joinStream()">📡 <span id="stream-banner-text">Кто-то ведёт трансляцию! Нажми чтобы войти</span></div>
 
             <div class="header">
+                <button class="secondary" onclick="openDrawer()" style="padding: 8px 12px; font-size: 1.2rem;">☰</button>
                 <div class="header-title" id="display-my-name">МОИ ЧАТЫ</div>
-                <button class="secondary" onclick="showSettings()" style="padding: 8px 12px; font-size: 1rem;">⚙</button>
+                <div style="width:44px;"></div>
             </div>
 
             <!-- Вкладки -->
@@ -1849,6 +2258,7 @@
         <div id="chat-window" class="screen" style="position:relative;">
             <div class="header">
                 <button class="secondary" onclick="showList()" style="padding: 8px 12px;">←</button>
+                <div class="chat-header-avatar" id="chat-header-avatar" onclick="showProfile(currentTargetId, document.getElementById('chat-target-name').innerText)">?</div>
                 <div class="chat-header-info">
                     <span id="chat-target-name" class="header-title">ЧАТ</span>
                     <span id="chat-target-status" class="chat-status"></span>
@@ -1897,24 +2307,6 @@
             <div style="padding: 16px; overflow-y: auto; flex:1;">
 
                 <div class="settings-section">
-                    <label>АВАТАРКА</label>
-                    <div style="display:flex; align-items:center; gap:14px; margin-top:8px;">
-                        <div id="settings-avatar-preview" style="width:56px;height:56px;border-radius:50%;background:var(--surface2);border:2px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;">?</div>
-                        <div style="flex:1;">
-                            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
-                            <button onclick="document.getElementById('avatarInput').click()" style="width:100%; margin:0;">📷 ЗАГРУЗИТЬ ФОТО</button>
-                            <button class="secondary danger" onclick="removeAvatar()" style="width:100%; margin-top:6px; font-size:0.8rem;">УДАЛИТЬ</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <label>О СЕБЕ</label>
-                    <input type="text" id="setBio" placeholder="Короткое описание профиля..." maxlength="80" style="margin-top:8px;">
-                    <button onclick="saveBio()" style="margin-top:6px; width:100%;">СОХРАНИТЬ</button>
-                </div>
-
-                <div class="settings-section">
                     <label>ТЕМА ОФОРМЛЕНИЯ</label>
                     <div id="theme-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;"></div>
                     <input type="hidden" id="themeSelect">
@@ -1930,7 +2322,7 @@
                 </div>
 
                 <div class="settings-section">
-                    <label>УВЕДОМЛЕНИЯ ПРИ ВХОДЕ</label>
+                    <label>ПРИ ВХОДЕ</label>
                     <div class="toggle-row">
                         <label>Показывать правила</label>
                         <div class="toggle on" id="toggle-rules" onclick="toggleSetting('rules')"></div>
@@ -1939,11 +2331,6 @@
                         <label>Выбор настроения</label>
                         <div class="toggle on" id="toggle-mood" onclick="toggleSetting('mood')"></div>
                     </div>
-                    <div class="toggle-row">
-                        <label>Уведомления о сообщениях</label>
-                        <div class="toggle on" id="toggle-notif" onclick="toggleNotifications()"></div>
-                    </div>
-                    <button onclick="requestNotifPermission()" style="width:100%; margin-top:8px; font-size:0.82rem;">🔔 ВКЛЮЧИТЬ УВЕДОМЛЕНИЯ</button>
                 </div>
 
                 <div class="settings-section">
@@ -1957,10 +2344,6 @@
                     <button class="big-btn" onclick="applyLambda()">АКТИВИРОВАТЬ λ</button>
                 </div>
 
-                <div class="settings-section">
-                    <label>АККАУНТ</label>
-                    <button class="big-btn danger" onclick="logout()">ВЫЙТИ ИЗ АККАУНТА</button>
-                </div>
             </div>
         </div>
 
@@ -1980,15 +2363,6 @@
     </div>
 
     <!-- NOTIFICATION REQUEST -->
-    <div id="notif-request-overlay" class="notif-request-overlay" style="display:none;">
-        <div class="notif-request-card">
-            <div class="notif-request-icon">🔔</div>
-            <h3>УВЕДОМЛЕНИЯ</h3>
-            <p>Разреши уведомления чтобы получать сообщения даже когда вкладка свёрнута</p>
-            <button onclick="grantNotifPermission()" style="width:100%; margin:0 0 8px;">✓ РАЗРЕШИТЬ</button>
-            <button class="secondary" onclick="denyNotifPermission()" style="width:100%; margin:0;">НЕ СЕЙЧАС</button>
-        </div>
-    </div>
 
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
@@ -1998,15 +2372,7 @@
         <div class="rules-modal">
             <h3>📜 ПРАВИЛА</h3>
             <p>Прочитай перед использованием</p>
-            <ul class="rules-list">
-                <li><span class="rules-num">1</span>Спам картинками запрещён — у нас маленький сервер, береги ресурсы</li>
-                <li><span class="rules-num">2</span>Спам сообщениями тоже запрещён по тем же причинам</li>
-                <li><span class="rules-num">3</span>Будь добрым — здесь живые люди</li>
-                <li><span class="rules-num">4</span>Не создавай группы и каналы без смысла — только если реально нужно :3</li>
-                <li><span class="rules-num">5</span>Не делись личными данными других пользователей без их согласия</li>
-                <li><span class="rules-num">6</span>Реклама и ссылки на сторонние ресурсы запрещены</li>
-                <li><span class="rules-num">7</span>За нарушение правил — бан без предупреждения</li>
-            </ul>
+            <ul class="rules-list" id="rules-list-overlay"></ul>
             <button onclick="acceptRules()" style="width:100%; margin:0;">✓ ПРИНИМАЮ ПРАВИЛА</button>
         </div>
     </div>
@@ -2280,6 +2646,182 @@
             }
         }
 
+        // ===== 15 ПРАВИЛ =====
+        const RULES = [
+            'Спам картинками запрещён — у нас маленький сервер, береги ресурсы',
+            'Спам сообщениями тоже запрещён по тем же причинам',
+            'Будь добрым — здесь живые люди',
+            'Не создавай группы и каналы без смысла — только если реально нужно :3',
+            'Не делись личными данными других пользователей без их согласия',
+            'Реклама и ссылки на сторонние ресурсы запрещены',
+            'За нарушение правил — бан без предупреждения',
+            'Запрещён контент 18+ любого характера',
+            'Запрещены оскорбления, угрозы и буллинг',
+            'Не выдавай себя за других пользователей или администрацию',
+            'Запрещено обходить бан через новые аккаунты',
+            'Не используй ботов или скрипты для автоматической рассылки',
+            'Уважай приватность — не скринь и не распространяй чужие сообщения',
+            'Споры решай мирно или через репорт, не устраивай публичных разборок',
+            'Администрация имеет право изменять правила — следи за обновлениями :3',
+        ];
+
+        function renderRules(containerId) {
+            const el = document.getElementById(containerId);
+            if(!el) return;
+            el.innerHTML = RULES.map((r, i) => `
+                <li><span class="rules-num">${i+1}</span>${r}</li>`).join('');
+        }
+
+        function showRulesScreen() {
+            renderRules('rules-list-full');
+            showScreen('rules-screen');
+        }
+
+        // ===== СПЛЭШ ЭКРАН =====
+        function initSplash() {
+            initParticles();
+            const bar = document.getElementById('splash-bar');
+            const splash = document.getElementById('splash-screen');
+            let startY = null;
+
+            // Свайп вверх
+            splash.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive:true});
+            splash.addEventListener('touchend', e => {
+                if(startY !== null && startY - e.changedTouches[0].clientY > 60) hideSplash();
+                startY = null;
+            }, {passive:true});
+
+            // Клик на полоску или тап
+            bar.addEventListener('click', hideSplash);
+            splash.addEventListener('click', hideSplash);
+        }
+
+        function hideSplash() {
+            const splash = document.getElementById('splash-screen');
+            splash.style.transition = 'transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s';
+            splash.style.transform = 'translateY(-100%)';
+            splash.style.opacity = '0';
+            setTimeout(() => { splash.style.display = 'none'; }, 400);
+        }
+
+        // ===== ЧАСТИЦЫ =====
+        function initParticles() {
+            const canvas = document.getElementById('particle-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff6600';
+            const particles = [];
+            for(let i = 0; i < 25; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 3 + 1,
+                    speed: Math.random() * 0.5 + 0.2,
+                    opacity: Math.random() * 0.5 + 0.1,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = accent;
+                    ctx.globalAlpha = p.opacity;
+                    ctx.fill();
+                    p.y -= p.speed;
+                    if(p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+                });
+                ctx.globalAlpha = 1;
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // ===== DRAWER =====
+        function openDrawer() {
+            // Обновляем инфо в drawer
+            const avatar = localStorage.getItem('avatar_' + myId) || '';
+            const drawerAvatar = document.getElementById('drawer-avatar');
+            if(avatar) {
+                drawerAvatar.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            } else {
+                const colors = ['#ff6600','#7c6bff','#00cc33','#e040fb','#0099cc'];
+                const char = (tempUsername||'?').replace(/^\[.*?\]\s*/,'')[0]?.toUpperCase()||'?';
+                const color = colors[char.charCodeAt(0) % colors.length];
+                drawerAvatar.innerHTML = `<div style="width:100%;height:100%;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:bold;color:#fff;">${char}</div>`;
+            }
+            document.getElementById('drawer-name').textContent = tempUsername || '—';
+            document.getElementById('drawer-mood').textContent = localStorage.getItem('mood_' + myId) || '';
+
+            document.getElementById('drawer').classList.add('open');
+            document.getElementById('drawer-overlay').classList.add('open');
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('drawer-overlay').classList.remove('open');
+        }
+
+        // ===== АККАУНТ =====
+        function openAccount() {
+            // Заполняем данные
+            const avatar = localStorage.getItem('avatar_' + myId) || '';
+            const avatarEl = document.getElementById('account-avatar-display');
+            if(avatar) {
+                avatarEl.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            } else {
+                const colors = ['#ff6600','#7c6bff','#00cc33','#e040fb','#0099cc'];
+                const char = (tempUsername||'?').replace(/^\[.*?\]\s*/,'')[0]?.toUpperCase()||'?';
+                const color = colors[char.charCodeAt(0) % colors.length];
+                avatarEl.innerHTML = `<div style="width:100%;height:100%;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:bold;color:#fff;">${char}</div>`;
+            }
+            document.getElementById('account-username-display').textContent = tempUsername || '—';
+            const bio = localStorage.getItem('bio_' + myId) || '';
+            document.getElementById('account-bio-display').textContent = bio || 'Нет описания';
+            document.getElementById('accountBio').value = bio;
+            document.getElementById('newUsername').value = '';
+            showScreen('account-screen');
+        }
+
+        async function changeUsername() {
+            const newName = document.getElementById('newUsername').value.trim();
+            if(!newName) return toast('Введи новое имя', 'error');
+            if(newName.length < 2) return toast('Минимум 2 символа', 'error');
+            if(newName.length > 20) return toast('Максимум 20 символов', 'error');
+            if(!/^[a-zA-Zа-яА-ЯёЁ0-9_]+$/.test(newName)) return toast('Только буквы, цифры и _', 'error');
+
+            const res = await fetch('/api/change-username', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({userId: myId, newUsername: newName})
+            });
+            const data = await res.json();
+            if(data.success) {
+                tempUsername = newName;
+                saveSession();
+                updateDisplayName();
+                document.getElementById('account-username-display').textContent = newName;
+                document.getElementById('newUsername').value = '';
+                toast('✓ Имя изменено!', 'success');
+            } else {
+                toast(data.error || 'Имя уже занято', 'error');
+            }
+        }
+
+        async function saveAccountBio() {
+            const bio = document.getElementById('accountBio').value.trim();
+            await fetch('/api/bio', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({userId: myId, bio})
+            });
+            localStorage.setItem('bio_' + myId, bio);
+            document.getElementById('account-bio-display').textContent = bio || 'Нет описания';
+            toast('✓ Описание сохранено', 'success');
+        }
+
         const ADMIN_USERNAME = 'adminjs';
 
         // ===== АВТОВХОД =====
@@ -2300,10 +2842,9 @@
         function enterApp() {
             saveSession();
             loadTheme();
-            const sel = document.getElementById('themeSelect');
-            if(sel) sel.value = localStorage.getItem('app_theme') || 'dark';
             loadWallpaper();
             loadToggles();
+            hideSplash();
 
             const rawName = tempUsername.replace(/^\[.*?\]\s*/, '').toLowerCase();
             if(rawName === ADMIN_USERNAME) {
@@ -2324,24 +2865,25 @@
             checkStreamBanner();
             if(window.streamBannerInt) clearInterval(window.streamBannerInt);
             window.streamBannerInt = setInterval(checkStreamBanner, 5000);
-            initNotifications();
 
-            // Правила
+            // Правила при входе
             const showRules = localStorage.getItem('setting_rules') !== 'off';
             if(showRules) {
-                document.getElementById('rules-overlay').style.display = 'flex';
+                setTimeout(() => {
+                    renderRules('rules-list-overlay');
+                    document.getElementById('rules-overlay').style.display = 'flex';
+                }, 500);
             } else {
-                // Эмодзи статус
                 const showMood = localStorage.getItem('setting_mood') !== 'off';
-                if(showMood) showMoodPicker();
+                if(showMood) setTimeout(showMoodPicker, 300);
             }
         }
 
         // Принять правила
         function acceptRules() {
-            document.getElementById('rules-overlay').style.display = 'none';
+            showScreen('list-screen');
             const showMood = localStorage.getItem('setting_mood') !== 'off';
-            if(showMood) showMoodPicker();
+            if(showMood) setTimeout(showMoodPicker, 300);
         }
 
         // Тогглы настроек
@@ -2419,6 +2961,19 @@
             nameEl.onclick = () => showProfile(id, name || id);
             document.getElementById('chat-target-status').textContent = '';
             document.getElementById('typing-indicator').classList.remove('visible');
+            // Аватарка в шапке
+            const headerAv = document.getElementById('chat-header-avatar');
+            if(headerAv) {
+                const cached = localStorage.getItem('avatar_cache_' + id);
+                if(cached) headerAv.innerHTML = `<img src="${cached}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                else {
+                    const c = (name||'?')[0].toUpperCase();
+                    const colors = ['#ff6600','#7c6bff','#00cc33','#e040fb','#0099cc'];
+                    headerAv.style.background = colors[c.charCodeAt(0)%colors.length];
+                    headerAv.textContent = c;
+                }
+                headerAv.onclick = () => showProfile(id, name || id);
+            }
             const btn = document.querySelector('#chat-window .header button:last-child');
             if(btn) { btn.innerHTML = '⚑'; btn.title = 'Пожаловаться'; btn.onclick = showReportModal; btn.style.color = '#e53935'; }
             showScreen('chat-window');
@@ -2437,6 +2992,10 @@
             window.statusInt = setInterval(updateChatStatus, 15000);
             if(window.typingInt) clearInterval(window.typingInt);
             window.typingInt = setInterval(checkTyping, 2000);
+        }
+
+        function openChatProfile() {
+            if(currentTargetId) showProfile(currentTargetId, document.getElementById('chat-target-name').innerText);
         }
 
         async function startChatByUsername(username) {
@@ -2491,8 +3050,6 @@
 
         function showSettings() {
             clearInterval(window.listInt);
-            loadSettingsAvatar();
-            loadSettingsBio();
             loadToggles();
             renderThemeGrid();
             showScreen('settings-screen');
@@ -2550,16 +3107,9 @@
             const hash = JSON.stringify(messages.map(m => m.id || m.time + m.text + (m.reactions ? JSON.stringify(m.reactions) : '')));
             if(hash === lastMsgHash) return;
 
-            // Проверяем новые сообщения для уведомлений
+            // Проверяем новые сообщения
             if(lastMsgHash !== '' && messages.length > lastMsgCount) {
                 const newMsgs = messages.slice(lastMsgCount);
-                newMsgs.forEach(m => {
-                    if(m.fromId !== myId) {
-                        const senderName = m.fromName || document.getElementById('chat-target-name')?.innerText || 'Новое сообщение';
-                        const body = m.text || (m.photo ? '📷 Фото' : '');
-                        sendNotification(senderName, body);
-                    }
-                });
                 // Показываем кнопку ↓ если не внизу
                 const h = document.getElementById('chat-history');
                 const isBottom = h.scrollHeight - h.scrollTop <= h.clientHeight + 80;
@@ -2568,6 +3118,11 @@
                     const btn = document.getElementById('scroll-to-bottom-btn');
                     const badge = document.getElementById('new-msg-badge');
                     btn.classList.add('visible');
+                    badge.style.display = 'flex';
+                    badge.textContent = newMsgCount > 9 ? '9+' : newMsgCount;
+                }
+                // Звук при новом сообщении
+                if(newMsgs.some(m => m.fromId !== myId)) playNotifSound();
                     badge.style.display = 'flex';
                     badge.textContent = newMsgCount > 9 ? '9+' : newMsgCount;
                 }
@@ -2651,11 +3206,15 @@
         }
 
         async function toggleReaction(msgId, emoji) {
+            // Анимация на кнопке реакции
+            event.target.closest('.reaction-chip')?.classList.add('reaction-pop');
+            setTimeout(() => event.target.closest('.reaction-chip')?.classList.remove('reaction-pop'), 400);
+
             await fetch('/api/reactions', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({msgId, userId: myId, emoji, chatType: currentChatType, chatId: currentChatType === 'group' ? currentGroupId : currentTargetId})
             });
-            lastMsgHash = ''; // сбрасываем хэш чтобы обновилось
+            lastMsgHash = '';
             loadMessages();
         }
 
@@ -3063,108 +3622,6 @@
             });
             lastMsgHash = '';
             loadMessages();
-        }
-
-        // ===== УВЕДОМЛЕНИЯ (OneSignal) =====
-        let notifEnabled = false;
-
-        async function initNotifications() {
-            notifEnabled = localStorage.getItem('notif_enabled') !== 'off';
-            updateNotifToggle();
-
-            // Показываем свой красивый запрос если ещё не спрашивали
-            if(localStorage.getItem('notif_asked') !== '1') {
-                setTimeout(() => {
-                    document.getElementById('notif-request-overlay').style.display = 'flex';
-                }, 2000);
-            }
-        }
-
-        function updateNotifToggle() {
-            const t = document.getElementById('toggle-notif');
-            if(t) t.className = 'toggle ' + (notifEnabled ? 'on' : '');
-        }
-
-        async function grantNotifPermission() {
-            document.getElementById('notif-request-overlay').style.display = 'none';
-            localStorage.setItem('notif_asked', '1');
-            try {
-                // OneSignal запрос
-                if(window.OneSignal) {
-                    await OneSignal.Notifications.requestPermission();
-                    const granted = OneSignal.Notifications.permission;
-                    if(granted) {
-                        notifEnabled = true;
-                        localStorage.setItem('notif_enabled', 'on');
-                        toast('🔔 Уведомления включены!', 'success');
-                    }
-                } else {
-                    // Fallback — браузерный API
-                    const perm = await Notification.requestPermission();
-                    if(perm === 'granted') {
-                        notifEnabled = true;
-                        localStorage.setItem('notif_enabled', 'on');
-                        toast('🔔 Уведомления включены!', 'success');
-                    }
-                }
-            } catch(e) {
-                toast('Не удалось включить уведомления', 'error');
-            }
-            updateNotifToggle();
-        }
-
-        function denyNotifPermission() {
-            document.getElementById('notif-request-overlay').style.display = 'none';
-            localStorage.setItem('notif_asked', '1');
-        }
-
-        function requestNotifPermission() {
-            document.getElementById('notif-request-overlay').style.display = 'flex';
-        }
-
-        function toggleNotifications() {
-            notifEnabled = !notifEnabled;
-            localStorage.setItem('notif_enabled', notifEnabled ? 'on' : 'off');
-            if(notifEnabled && localStorage.getItem('notif_asked') !== '1') {
-                requestNotifPermission();
-            }
-            updateNotifToggle();
-            toast(notifEnabled ? '🔔 Уведомления включены' : '🔕 Уведомления выключены', 'info');
-        }
-
-        function sendNotification(title, body) {
-            if(!notifEnabled) return;
-            // Не уведомляем если вкладка активна
-            if(!document.hidden) return;
-
-            // Пробуем браузерный API (работает в браузере и некоторых WebView)
-            if(Notification.permission === 'granted') {
-                try {
-                    const n = new Notification(title, {
-                        body,
-                        icon: 'https://em-content.zobj.net/source/twitter/376/speech-balloon_1f4ac.png'
-                    });
-                    n.onclick = () => { window.focus(); n.close(); };
-                    setTimeout(() => n.close(), 5000);
-                } catch(e) {}
-            }
-            playNotifSound();
-        }
-
-        function playNotifSound() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.2);
-            } catch(e) {}
         }
 
         // ===== КНОПКА ↓ НОВЫЕ СООБЩЕНИЯ =====
@@ -3784,11 +4241,16 @@
             toast('λ активирована!', 'success');
         }
 
+        // ===== УВЕДОМЛЕНИЯ — УДАЛЕНЫ =====
+        function initNotifications() {} // заглушка
+
         // Enter в логине
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
             document.getElementById('loginUsername').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
             document.getElementById('msgText').addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+            // Сплэш
+            initSplash();
             // Автовход
             if(tryAutoLogin()) enterApp();
         });
