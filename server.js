@@ -4,7 +4,11 @@ const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 8080;
-const DATA_FILE = path.join(__dirname, 'database.json');
+
+// ── JSONBin вместо файловой БД ───────────────────────────
+const BIN_ID = process.env.JSONBIN_ID || '69a5523cae596e708f574b43';
+const MASTER_KEY = process.env.JSONBIN_KEY || '$2a$10$VNL.Ho51Sd48S9SE7h6fW.bvW86RWaU0bHd7KQiH2jsbAvZG8JlPe';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 // ── Папка для загрузок ───────────────────────────────────
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -49,43 +53,59 @@ app.post('/api/upload', (req, res, next) => {
     }
 });
 
-// Инициализация базы данных
-let db = { w3tokens: [], users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], reports: [], feed: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0, lastFeedId: 0 };
+// ── База данных через JSONBin ────────────────────────────
+let db = { w3tokens: [], users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], reports: [], feed: [], callHistory: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0, lastFeedId: 0 };
 
-function loadDB() {
+// Кэш в памяти
+let _dbCache = null;
+let _dbCacheTime = 0;
+const DB_CACHE_TTL = 10000; // 10 сек
+
+async function loadDB() {
     try {
-        if (fs.existsSync(DATA_FILE)) {
-            const data = fs.readFileSync(DATA_FILE, 'utf8');
-            const parsed = JSON.parse(data);
-            if (!parsed.groups) parsed.groups = [];
-            if (!parsed.groupMessages) parsed.groupMessages = [];
-            if (!parsed.lastGroupId) parsed.lastGroupId = 100;
-            if (!parsed.channels) parsed.channels = [];
-            if (!parsed.channelPosts) parsed.channelPosts = [];
-            if (!parsed.channelComments) parsed.channelComments = [];
-            if (!parsed.lastChannelId) parsed.lastChannelId = 0;
-            if (!parsed.reports) parsed.reports = [];
-            if (!parsed.feed) parsed.feed = [];
-            if (!parsed.w3tokens) parsed.w3tokens = [];
-            if (!parsed.lastFeedId) parsed.lastFeedId = 0;
-            if (!parsed.callHistory) parsed.callHistory = [];
-            return parsed;
-        }
-    } catch (e) {
-        console.error("[DB] Ошибка загрузки, создаю новую базу.");
+        const now = Date.now();
+        if (_dbCache && (now - _dbCacheTime) < DB_CACHE_TTL) return _dbCache;
+        const r = await fetch(BIN_URL + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
+        const d = await r.json();
+        const parsed = d.record || {};
+        if (!parsed.groups) parsed.groups = [];
+        if (!parsed.groupMessages) parsed.groupMessages = [];
+        if (!parsed.lastGroupId) parsed.lastGroupId = 100;
+        if (!parsed.channels) parsed.channels = [];
+        if (!parsed.channelPosts) parsed.channelPosts = [];
+        if (!parsed.channelComments) parsed.channelComments = [];
+        if (!parsed.lastChannelId) parsed.lastChannelId = 0;
+        if (!parsed.reports) parsed.reports = [];
+        if (!parsed.feed) parsed.feed = [];
+        if (!parsed.w3tokens) parsed.w3tokens = [];
+        if (!parsed.lastFeedId) parsed.lastFeedId = 0;
+        if (!parsed.callHistory) parsed.callHistory = [];
+        if (!parsed.users) parsed.users = [];
+        if (!parsed.messages) parsed.messages = [];
+        if (!parsed.lastId) parsed.lastId = 1000;
+        _dbCache = parsed;
+        _dbCacheTime = now;
+        return parsed;
+    } catch(e) {
+        console.error("[DB] Ошибка загрузки JSONBin:", e.message);
+        return db;
     }
-    return { w3tokens: [], users: [], messages: [], groups: [], groupMessages: [], channels: [], channelPosts: [], channelComments: [], reports: [], feed: [], callHistory: [], lastId: 1000, lastGroupId: 100, lastChannelId: 0, lastFeedId: 0 };
 }
 
 let _saveTimer = null;
 function saveDB() {
-    // Дебаунс: откладываем запись на 500мс чтобы не писать на диск при каждом сообщении
     if (_saveTimer) clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(() => {
+    _saveTimer = setTimeout(async () => {
         try {
-            fs.writeFileSync(DATA_FILE, JSON.stringify(db));
-        } catch (e) {
-            console.error("[DB] Ошибка записи:", e.message);
+            _dbCache = db;
+            _dbCacheTime = Date.now();
+            await fetch(BIN_URL, {
+                method: 'PUT',
+                headers: { 'X-Master-Key': MASTER_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify(db)
+            });
+        } catch(e) {
+            console.error("[DB] Ошибка записи JSONBin:", e.message);
         }
     }, 500);
 }
@@ -97,7 +117,8 @@ function generateGroupId() {
     return `G-${num}`;
 }
 
-db = loadDB();
+// Инициализация БД при старте
+loadDB().then(data => { db = data; console.log('[DB] JSONBin загружен, пользователей:', db.users?.length || 0); });
 
 
 
