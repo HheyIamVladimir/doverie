@@ -14,7 +14,7 @@
 /* === THEMES === */
 :root {
     --bg:#0f0f0f; --surface:#1a1a1a; --surface2:#242424;
-    --accent:#ff6600; --accent2:#ff8833;
+    --accent:#ff6600; --accent2:#ff8833; --accent-rgb:255,102,0;
     --text:#f0f0f0; --text-muted:#777; --border:#2a2a2a;
     --msg-my-bg:#ff6600; --msg-my-color:#fff;
     --msg-their-bg:#242424; --msg-their-color:#f0f0f0;
@@ -22,7 +22,7 @@
 }
 [data-theme="light"] {
     --bg:#f2f2f2; --surface:#fff; --surface2:#ebebeb;
-    --accent:#ff6600; --accent2:#ff8833;
+    --accent:#ff6600; --accent2:#ff8833; --accent-rgb:255,102,0;
     --text:#111; --text-muted:#888; --border:#ddd;
     --msg-my-bg:#ff6600; --msg-my-color:#fff;
     --msg-their-bg:#e4e4e4; --msg-their-color:#111;
@@ -30,7 +30,7 @@
 }
 [data-theme="neon"] {
     --bg:#05050f; --surface:#0c0c20; --surface2:#131330;
-    --accent:#00ffcc; --accent2:#ff00ff;
+    --accent:#00ffcc; --accent2:#ff00ff; --accent-rgb:0,255,204;
     --text:#e0ffe0; --text-muted:#3a5a3a; --border:#1a1a40;
     --msg-my-bg:#00ffcc; --msg-my-color:#000;
     --msg-their-bg:#131330; --msg-their-color:#e0ffe0;
@@ -38,7 +38,7 @@
 }
 [data-theme="ocean"] {
     --bg:#060e18; --surface:#0d1e30; --surface2:#122840;
-    --accent:#0099ff; --accent2:#00ccff;
+    --accent:#0099ff; --accent2:#00ccff; --accent-rgb:0,153,255;
     --text:#d0eeff; --text-muted:#3a6080; --border:#0d2540;
     --msg-my-bg:#0099ff; --msg-my-color:#fff;
     --msg-their-bg:#122840; --msg-their-color:#d0eeff;
@@ -46,7 +46,7 @@
 }
 [data-theme="matrix"] {
     --bg:#000; --surface:#0a0a0a; --surface2:#111;
-    --accent:#00ff41; --accent2:#00cc33;
+    --accent:#00ff41; --accent2:#00cc33; --accent-rgb:0,255,65;
     --text:#00ff41; --text-muted:#004d15; --border:#001a00;
     --msg-my-bg:#003300; --msg-my-color:#00ff41;
     --msg-their-bg:#0a0a0a; --msg-their-color:#00ff41;
@@ -64,19 +64,19 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
 @keyframes scIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 /* === HEADER === */
-.hdr{background:var(--header-bg);border-bottom:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:8px;min-height:54px;flex-shrink:0;}
+.hdr{background:var(--header-bg);border-bottom:1px solid rgba(255,255,255,.05);padding:10px 12px;display:flex;align-items:center;gap:8px;min-height:54px;flex-shrink:0;backdrop-filter:blur(20px);}
 .hdr-title{font-size:.95rem;font-weight:bold;letter-spacing:.08em;flex:1;}
 
 /* === BUTTONS === */
-button{cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:.88rem;font-weight:bold;letter-spacing:.05em;padding:11px 16px;transition:opacity .15s,transform .1s;}
+button{cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:.88rem;font-weight:bold;letter-spacing:.05em;padding:11px 16px;transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 12px rgba(0,0,0,.2);}
 button:active{transform:scale(.96);opacity:.82;}
-button.sec{background:var(--surface2);color:var(--text);}
-button.ghost{background:none;color:var(--text-muted);padding:7px 10px;}
+button.sec{background:var(--surface2);color:var(--text);box-shadow:none;}
+button.ghost{background:none;color:var(--text-muted);padding:7px 10px;box-shadow:none;}
 button.danger{background:#e53935;color:#fff;}
 
 /* === INPUTS === */
-input,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.93rem;padding:11px 13px;outline:none;transition:border-color .2s;}
-input:focus,textarea:focus{border-color:var(--accent);}
+input,textarea{width:100%;background:var(--surface2);border:1.5px solid transparent;border-radius:14px;color:var(--text);font-family:inherit;font-size:.93rem;padding:12px 15px;outline:none;transition:all .2s;box-shadow:inset 0 1px 3px rgba(0,0,0,.15);}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.12),inset 0 1px 3px rgba(0,0,0,.1);}
 
 /* === AUTH === */
 #s-auth{align-items:center;justify-content:center;padding:20px;background:var(--bg);}
@@ -387,7 +387,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
 <div id="s-main" class="screen">
   <div class="hdr">
     <div class="hdr-title" id="mainTitle">ЧАТЫ</div>
-    <button class="ghost" onclick="go('s-settings')" style="font-size:1.15rem;">⚙️</button>
+    <div style="width:36px;"></div>
   </div>
   <div class="tabs">
     <button class="tab active" id="tab-chats" onclick="switchTab('chats')">💬 ЧАТЫ</button>
@@ -418,7 +418,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
     <button class="bnav-btn" id="bn-calls" onclick="goCalls()"><span class="ico">📞</span>ЗВОНКИ</button>
     <button class="bnav-btn" id="bn-feed" onclick="goFeed()"><span class="ico">📃</span>ЛЕНТА</button>
     <button class="bnav-btn" id="bn-profile" onclick="goProfile()"><span class="ico">👤</span>ПРОФИЛЬ</button>
-    <button class="bnav-btn" id="bn-rules" onclick="goRules()"><span class="ico">📖</span>ПРАВИЛА</button>
+    <button class="bnav-btn" id="bn-settings" onclick="goSettings()"><span class="ico">⚙️</span>НАСТРОЙКИ</button>
   </div>
 </div>
 
@@ -467,7 +467,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
     <button class="bnav-btn" id="bn-calls2" onclick="goCalls()"><span class="ico">📞</span>ЗВОНКИ</button>
     <button class="bnav-btn" id="bn-feed2" onclick="goFeed()"><span class="ico">📃</span>ЛЕНТА</button>
     <button class="bnav-btn" id="bn-profile2" onclick="goProfile()"><span class="ico">👤</span>ПРОФИЛЬ</button>
-    <button class="bnav-btn" id="bn-rules2" onclick="goRules()"><span class="ico">📖</span>ПРАВИЛА</button>
+    <button class="bnav-btn" id="bn-settings2" onclick="goSettings()"><span class="ico">⚙️</span>НАСТРОЙКИ</button>
   </div>
 
 </div>
@@ -483,7 +483,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
     <button class="bnav-btn" id="bn-calls3" onclick="goCalls()"><span class="ico">📞</span>ЗВОНКИ</button>
     <button class="bnav-btn" id="bn-feed3" onclick="goFeed()"><span class="ico">📃</span>ЛЕНТА</button>
     <button class="bnav-btn" id="bn-profile3" onclick="goProfile()"><span class="ico">👤</span>ПРОФИЛЬ</button>
-    <button class="bnav-btn" id="bn-rules3" onclick="goRules()"><span class="ico">📖</span>ПРАВИЛА</button>
+    <button class="bnav-btn" id="bn-settings3" onclick="goSettings()"><span class="ico">⚙️</span>НАСТРОЙКИ</button>
   </div>
 </div>
 
@@ -507,7 +507,7 @@ input:focus,textarea:focus{border-color:var(--accent);}
     <button class="bnav-btn" id="bn-calls4" onclick="goCalls()"><span class="ico">📞</span>ЗВОНКИ</button>
     <button class="bnav-btn" id="bn-feed4" onclick="goFeed()"><span class="ico">📃</span>ЛЕНТА</button>
     <button class="bnav-btn" id="bn-profile4" onclick="goProfile()"><span class="ico">👤</span>ПРОФИЛЬ</button>
-    <button class="bnav-btn" id="bn-rules4" onclick="goRules()"><span class="ico">📖</span>ПРАВИЛА</button>
+    <button class="bnav-btn" id="bn-settings4" onclick="goSettings()"><span class="ico">⚙️</span>НАСТРОЙКИ</button>
   </div>
 </div>
 
@@ -684,6 +684,7 @@ function switchBnav(active){
 }
 function goFeed(){switchBnav('feed');go('s-feed');loadFeed();}
 function goProfile(){switchBnav('profile');go('s-profile');loadMyProfile();}
+function goSettings(){switchBnav('settings');go('s-settings');}
 function goRules(){switchBnav('rules');go('s-rules');}
 function goCalls(){switchBnav('calls');go('s-calls');loadCallHistory();}
 
@@ -779,7 +780,7 @@ async function doW3Auth(){
       return;
     }
     myId=r.id; myUser=r.username;
-    localStorage.setItem('_id',myId);localStorage.setItem('_un',myUser);
+    setCookie('_id',myId);setCookie('_un',myUser);
     onLogin();
   }catch(e){msg.textContent='Нет связи с сервером';}
 }
@@ -803,12 +804,15 @@ async function doAuth(){
       const r=await post('/api/register',{username,password});
       if(!r.success){msg.textContent=r.error==='taken'?'Имя уже занято':'Ошибка регистрации';return;}
       myId=r.id;myUser=r.displayName;
+      // Показываем ссылку на W:3
+      msg.style.color='var(--accent)';
+      msg.innerHTML='✅ Аккаунт создан! <a href="https://w3.su" target="_blank" style="color:var(--accent);font-weight:bold;">Зарегистрируйся на W:3</a> чтобы получить токен для входа';
     }else{
       const r=await post('/api/login',{username,password});
       if(!r.success){msg.textContent=r.error==='banned'?'Аккаунт заблокирован':'Неверное имя или пароль';return;}
       myId=r.id;myUser=r.username;
     }
-    localStorage.setItem('_id',myId);localStorage.setItem('_un',myUser);
+    setCookie('_id',myId);setCookie('_un',myUser);
     onLogin();
   }catch(e){msg.textContent='Нет связи с сервером';}
 }
@@ -1273,7 +1277,7 @@ async function changeUsername(){
   const n=document.getElementById('newName').value.trim();if(!n){toast('Введи новое имя','err');return;}
   try{
     const r=await post('/api/change-username',{userId:myId,newUsername:n});
-    if(r.success){myUser=r.username;localStorage.setItem('_un',myUser);document.getElementById('myName').textContent=myUser;document.getElementById('newName').value='';toast('Имя изменено!','ok');}
+    if(r.success){myUser=r.username;setCookie('_un',myUser);document.getElementById('myName').textContent=myUser;document.getElementById('newName').value='';toast('Имя изменено!','ok');}
     else toast(r.error||'Ошибка','err');
   }catch(e){toast('Ошибка','err');}
 }
@@ -1309,7 +1313,7 @@ function msgViewedUser(){if(!upId) return;goBack();openChat(upId,upName||upId);}
 // LOGOUT
 function logout(){
   stopChat();myId=null;myUser=null;
-  localStorage.removeItem('_id');localStorage.removeItem('_un');
+  delCookie('_id');delCookie('_un');
   hist=[];
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('s-auth').classList.add('active');
@@ -1462,7 +1466,11 @@ async function adminUnban(targetId){
 // INIT
 renderThemes();
 renderRules();
-const _id=localStorage.getItem('_id'),_un=localStorage.getItem('_un');
+// Session via cookies instead of localStorage
+function getCookie(name){const v=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='));return v?decodeURIComponent(v.split('=')[1]):null;}
+function setCookie(name,val,days=365){const d=new Date();d.setTime(d.getTime()+days*24*60*60*1000);document.cookie=name+'='+encodeURIComponent(val)+';expires='+d.toUTCString()+';path=/;SameSite=Lax';}
+function delCookie(name){document.cookie=name+'=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';}
+const _id=getCookie('_id'),_un=getCookie('_un');
 if(_id&&_un){myId=_id;myUser=_un;onLogin();}
 
 
